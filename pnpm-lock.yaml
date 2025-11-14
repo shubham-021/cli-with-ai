@@ -17,6 +17,9 @@ importers:
       '@langchain/openai':
         specifier: ^1.1.1
         version: 1.1.1(@langchain/core@1.0.5(openai@6.9.0(zod@4.1.12)))
+      '@langchain/tavily':
+        specifier: ^1.0.0
+        version: 1.0.0(@langchain/core@1.0.5(openai@6.9.0(zod@4.1.12)))
       chalk:
         specifier: ^5.6.2
         version: 5.6.2
@@ -115,6 +118,12 @@ packages:
 
   '@langchain/openai@1.1.1':
     resolution: {integrity: sha512-0kUaXejo/sn6QAohWHDaAUapC4CJRkJIajGaWfJC+llSqpDBnmBE1oHg1M2fi1OCeP+ns9SxB6BTsq4Qbiqmig==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': ^1.0.0
+
+  '@langchain/tavily@1.0.0':
+    resolution: {integrity: sha512-kE3E1bTYtp4km7YLQM/lKOZW2yANFNsg4Fk33j11uAGcUGKN2skKzpEe4qgF34wRxMi4G4r7Qmpji2j+v24IaA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': ^1.0.0
@@ -548,6 +557,11 @@ snapshots:
       zod: 4.1.12
     transitivePeerDependencies:
       - ws
+
+  '@langchain/tavily@1.0.0(@langchain/core@1.0.5(openai@6.9.0(zod@4.1.12)))':
+    dependencies:
+      '@langchain/core': 1.0.5(openai@6.9.0(zod@4.1.12))
+      zod: 4.1.12
 
   '@tsconfig/node10@1.0.12': {}
 

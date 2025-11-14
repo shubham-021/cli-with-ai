@@ -14,13 +14,21 @@ program
     .version("0.0.1")
     .description("your assistant at your step")
 
-program.
-    command('set-api')
+program
+    .command('set-api')
     .description('Set api for your model')
-    .argument('<string>','api')
+    .argument('<api>')
     .action((api)=>{
         config.set('api',api);
         // console.log(config.get("api"));
+    })
+
+program
+    .command('set-search-api')
+    .description('Set api for your search model')
+    .argument('<api>')
+    .action((api)=>{
+        config.set('search-api',api);
     })
 
 program.
@@ -63,8 +71,10 @@ program
             try {
                 // console.log(query);
                 const api_key = config.get("api") as string | undefined;
+                const search_api_key = config.get("search-api") as string | undefined;
                 if(!api_key) throw new Error("API_KEY not found")
                 const llm = new LLMCore(api_key);
+                if(search_api_key) llm.set_current_search(search_api_key);
                 const res = await llm.query(query);
                 spinner.stop();
                 console.log(chalk.cyan.bold("\n🤖: ",res));

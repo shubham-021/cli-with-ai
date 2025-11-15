@@ -1,6 +1,6 @@
-import { ToolMap,Providers } from "./types.js";
+import { ToolMap,Providers } from "../types.js";
 
-export const tool_webSearch: ToolMap = {
+export const webSearch: ToolMap = {
     [Providers.OpenAI]: {
       type: "function",
       function: {
@@ -43,11 +43,5 @@ export const tool_webSearch: ToolMap = {
         required: ["query"]
       }
     }
-  };
-
-// export const tool_fileGen: ToolMap = {
-//   [Providers.OpenAI] : {},
-//   [Providers.Claude] : {},
-//   [Providers.Gemini] : {},
-// }
+};
   

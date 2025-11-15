@@ -4,7 +4,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { TavilySearch } from "@langchain/tavily";
 import { HumanMessage, SystemMessage, AIMessage } from "langchain";
-import { tool_webSearch } from "./tools-def.js";
+import { webSearch } from "./tools-def/web_search.js";
 import { OpenAITool,Providers,ProviderMap, ClaudeTool, GeminiTool } from "./types.js";
 import { Tools } from "./tools.js";
 
@@ -22,7 +22,7 @@ class LLMCore{
         const LLM = ProviderMap[provider];
         this.tools = new Tools(search_api);
         this.getToolFromName.set("web_search",this.tools.web_search.bind(this.tools));
-        this.toolDefinition = [tool_webSearch[provider]];
+        this.toolDefinition = [webSearch[provider]];
         this.model = new LLM({ model, apiKey: api });
     }
 

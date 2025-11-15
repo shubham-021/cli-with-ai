@@ -3,24 +3,48 @@
 import { Command } from "commander";
 import chalk from "chalk"; 
 import figlet from "figlet";
-import ora from "ora";
+import ora, { spinners } from "ora";
 import Conf from 'conf';
 import LLMCore from "./core.js";
+import { selectProviderandModel } from "./inquirer.js";
+import { Config } from "./types.js";
+import inquirer from "inquirer";
 
 const program = new Command();
 const config = new Conf({projectName: 'arka-cli'});
 
 program
     .version("0.0.1")
-    .description("your assistant at your step")
+    .description("Your ai assistant in your cli")
 
 program
     .command('set-api')
     .description('Set api for your model')
     .argument('<api>')
     .action((api)=>{
-        config.set('api',api);
+        const set_config = config.get("config") as Config;
+        if(!set_config || set_config == undefined){
+            console.log(chalk.bold.red("Configure your model and provider first"));
+            process.exit(1);
+        }
+        config.set("config.api",api);
+        const provider = set_config.provider;
+        const model = set_config.model;
+
+        console.log(chalk.greenBright(`Api set for ${provider} - ${model}`));
+    })
+
+program
+    .command('delete-api')
+    .action((api)=>{
+        config.delete('api');
         // console.log(config.get("api"));
+    })
+
+program 
+    .command("delete-config")
+    .action(async ()=>{
+       config.delete("config");
     })
 
 program
@@ -38,24 +62,6 @@ program.
         console.log( api ? api : "Undefined");
     })
 
-program
-    .command('calculate')
-    .description('Run a given calculation')
-    .argument('<number>','number to calculate')
-    .option('--sum <value>','sum')
-    .option('--diff <value>','difference')
-    .option('--div <value>','divide')
-    .option('--mul <value>','multiply')
-    .option('--fac <value>','factorial')
-    .action((number , options) => {
-        if(options.sum){
-            const spinner = ora({spinner:"dots8Bit"}).start();
-            setTimeout(()=>{
-                spinner.stop();
-                console.log(chalk.bold(Number(number) + Number(options.sum)));
-            },5000);
-        }
-    })
 
 program
     .command('ask')
@@ -64,16 +70,21 @@ program
     .action(async (allArgs)=>{
         const query = allArgs.join(' ');
         const spinner = ora({spinner:"dots8Bit"}).start();
-        if(!config.get("api")){
-            spinner.fail("Api key not found");
+        const set_config = config.get("config") as Config;
+        // console.log(JSON.stringify(set_config));
+        if(!set_config){
+            spinner.fail("You haven't configured your provider and model yet");
             process.exit(1);
         }else{
             try {
-                // console.log(query);
-                const api_key = config.get("api") as string | undefined;
                 const search_api_key = config.get("search-api") as string | undefined;
-                if(!api_key) throw new Error("API_KEY not found")
-                const llm = new LLMCore(api_key);
+
+                if(!set_config.api || set_config.api === ""){
+                    spinner.fail("Api not found , Please set api for your provider");
+                    process.exit(1);
+                }
+
+                const llm = new LLMCore(set_config.provider,set_config.model,set_config.api);
                 if(search_api_key) llm.set_current_search(search_api_key);
                 const res = await llm.query(query);
                 spinner.stop();
@@ -88,6 +99,16 @@ program
                 process.exit(1);
             }
         }
+    })
+
+program
+    .command('configure')
+    .description('Configure AI provider and model')
+    .action(async() => {
+        const {provider , model} = await selectProviderandModel();
+        config.set("config",{provider,model,api:""})
+        console.log(chalk.greenBright(`Selected: ${provider} - ${model} \n`));
+        console.log(chalk.yellowBright.bold("Set your api key by running the command <set-api> \n"));
     })
 
 // process.argv returns an array containing all the command-line arguments passed when the Node.js process was launched.

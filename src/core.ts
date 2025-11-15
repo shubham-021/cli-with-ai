@@ -1,43 +1,26 @@
 import * as dotenv from "dotenv"
 import { ChatOpenAI } from "@langchain/openai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatAnthropic } from "@langchain/anthropic";
 import { TavilySearch } from "@langchain/tavily";
 import { HumanMessage, SystemMessage, AIMessage } from "langchain";
+import { tool_webSearch } from "./tools.js";
+import { OpenAITool,Providers,ProviderMap } from "./types.js";
 
 // dotenv.config();
-
-enum Models{
-    GPT41 = "gpt-4.1",
-    GPT4o = "gpt-4o-mini",
-    GPT5 = "gpt-5"
-}
 
 class LLMCore{
     private api:string;
     private search_model_setup:boolean = false;
-    private model:ChatOpenAI;
-    private toolDefinition = {
-        type: "function",
-        function:{
-            name: "web_search",
-            description: "Search the web for current time informations",
-            parameters:{
-                type:"object",
-                properties: {
-                    query: {
-                        type: "string",
-                        description: "The query to find information about."
-                    }
-                },
-                required: ["query"]
-            }
-        }
-    };
+    private model:ChatOpenAI|ChatGoogleGenerativeAI|ChatAnthropic;
+    private toolDefinition:OpenAITool = tool_webSearch.openai;
     private tool = new Map();
     private search_model!: TavilySearch;
 
-    constructor(api:string){
+    constructor(provider:Providers , model:string ,api:string){
         this.api = api;
-        this.model = new ChatOpenAI({model:"gpt-4o-mini",apiKey:this.api})
+        const LLM = ProviderMap[provider];
+        this.model = new LLM({ model, apiKey: api });
     }
 
     private async web_search(arg:{query:string}){
@@ -56,7 +39,7 @@ class LLMCore{
     }
 
 
-    define_model(model:Models){
+    define_model(model:string){
         this.model = new ChatOpenAI({model:model,apiKey:this.api})
     }
 

@@ -1,1 +1,1 @@
-{"root":["./src/core.ts","./src/main.ts"],"version":"5.8.3"}
+{"root":["./src/core.ts","./src/inquirer.ts","./src/main.ts","./src/tools.ts","./src/types.ts"],"version":"5.8.3"}

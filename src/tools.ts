@@ -11,10 +11,20 @@ import { Providers, ToolMap } from "./types.js";
 
 export class Tools{
     private search_model:TavilySearch;
-    tool_definition_list:ToolMap[] = [currLoc,makeDir,writeFile,appendFile,createFile,webSearch];
+    private tool_definition_list:ToolMap[] = [currLoc,makeDir,writeFile,appendFile,createFile,webSearch];
+    private fn_with_name = [
+        ["web_search",this.web_search.bind(this)],
+        ["append_file",this.append_file.bind(this)],
+        ["create_file",this.create_file.bind(this)],
+        ["current_loc",this.current_loc.bind(this)],
+        ["make_dir",this.make_dir.bind(this)],
+        ["write_file",this.write_file.bind(this)]
+    ]
+    getToolFromName = new Map();
 
     constructor(api:string){
         this.search_model = new TavilySearch({tavilyApiKey:api,maxResults:5})
+        this.fn_with_name.map((fn) => {this.getToolFromName.set(fn[0],fn[1])});
     };
 
     get_toolDefinition(provider:Providers){

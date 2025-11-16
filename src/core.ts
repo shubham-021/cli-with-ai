@@ -13,14 +13,14 @@ class LLMCore{
     private api:string;
     private model:ChatOpenAI|ChatGoogleGenerativeAI|ChatAnthropic;
     private toolDefinition:(OpenAITool|ClaudeTool|GeminiTool)[];
-    private getToolFromName = new Map();
+    private getToolFromName:Map<string,any>;
     private tools:Tools;
 
     constructor(provider:Providers , model:string ,api:string ,search_api:string){
         this.api = api;
         const LLM = ProviderMap[provider];
         this.tools = new Tools(search_api);
-        this.getToolFromName.set("web_search",this.tools.web_search.bind(this.tools));
+        this.getToolFromName = this.tools.getToolFromName;
         this.toolDefinition = this.tools.get_toolDefinition(provider);
         this.model = new LLM({ model, apiKey: api });
     }

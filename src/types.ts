@@ -1,6 +1,14 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
+import { AIMessage, HumanMessage, SystemMessage } from "langchain";
+import z from "zod"
+
+export const DEC_PROMPT_RESPONSE = z.object({
+    build : z.boolean().describe("Whether the query is about building something or not")
+})
+
+export type Message = SystemMessage|HumanMessage|AIMessage|{role:string,content:string,tool_call_id?:string,name:string}
 
 export type Config = {
     provider:Providers,

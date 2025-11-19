@@ -160,7 +160,7 @@ program
         const default_config = config.get("default");
 
         if(default_config === n){
-            chalk.yellowBright.bold(`Config ${n} is already set as default`);
+            console.log(chalk.yellowBright.bold(`Config ${n} is already set as default`));
             process.exit(1);
         }
 

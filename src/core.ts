@@ -119,24 +119,24 @@ class LLMCore{
             return res.text;
         }else{
             const PROMPT = get_planner_prompt(currentDate);
-            const messages:Message[] = [
+            const pre_messages:Message[] = [
                 new SystemMessage(PROMPT),
                 new HumanMessage(ask)
             ];
-            let planner_res = await this.model.invoke(messages);
+            let planner_res = await this.model.invoke(pre_messages);
 
             const PLANNER_RES = planner_res.text;
             // console.log(PLANNER_RES);
 
-            messages.push(new AIMessage({content:planner_res.content}));
+            // messages.push(new AIMessage({content:planner_res.content}));
 
             const PROMPT_EXECUTOR = get_executer_prompt();
 
-            messages.push(
+            const messages:Message[] = [
                 new SystemMessage(`${PROMPT_EXECUTOR}
                     Memory Summary of Previous Conversation: ${memory.summary || "(empty)"}`),
                 new HumanMessage(`Execute this plan:\n\n${PLANNER_RES}\n\nOriginal user request: ${ask}`)
-            )
+            ]
 
             let res = await this.model.invoke(messages,{tools: this.toolDefinition , tool_choice:"auto"});
 

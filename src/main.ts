@@ -45,17 +45,16 @@ program
             process.exit(1);
         }
 
-        if(search){
-            config.set(`${n}.search_api`,search);
-            console.log(chalk.greenBright("Api set for search agent"));
-            process.exit(1);
-        }
-
         const set_config = config.get(n) as Config;
         if(!set_config || set_config == undefined){
             console.log(chalk.bold.red("No config exists with this name.\n"));
             console.log(chalk.bold.red("Are you sure , you have configured your cli before ?"));
             process.exit(1);
+        }
+
+        if(search){
+            config.set(`${n}.search_api`,search);
+            console.log(chalk.greenBright("Api set for search agent"));
         }
 
         const provider = set_config.provider;
@@ -79,8 +78,8 @@ program
        config.delete(n);
     })
 
-program.
-    command('see-api')
+program
+    .command('see-api')
     .action(()=>{
         const api = config.get("config.api");
         const search_api = config.get("config.search_api");
@@ -126,7 +125,7 @@ program
 
             try {
                 const llm = new LLMCore(set_config.provider,set_config.model,api,search_api);
-                const res = await llm.query(query);
+                const res = await llm.router(query);
                 spinner.stop();
                 console.log(chalk.cyan.bold("\n🤖: ",res));
                 // for await (const chunk of stream) {
@@ -172,19 +171,20 @@ program
     .command('configure')
     .description('Configure AI provider and model')
     .option("-n <value>","name")
-    .option("-m <value>","model")
-    .option("-p <value>","provider")
+    .option("-m","model")
+    .option("-p","provider")
     .action(async(options) => {
         const {n,m,p} = options;
-        if(!n){
-            console.log(chalk.yellowBright.bold("Provide a name for your config using the -n flag"));
-            process.exit(1);
-        }
 
         if(m){
-            const _config = config.get(n) as Config;
+            let conf_name = n ?? "default";
+            // console.log(conf_name);
+            if(conf_name === "default") conf_name = config.get(conf_name);
+            const _config = config.get(conf_name) as Config;
+            // console.log(_config);
+            // console.log(_config?.provider)
             if(!_config || !_config.provider){
-                console.log(chalk.red.bold("Set your provider first"));
+                console.log(chalk.red.bold("This is only valid if you had any config before."));
                 process.exit(1);
             }
             const {model} = await selectModel(_config.provider);
@@ -193,7 +193,8 @@ program
         }
 
         if(p){
-            const _config = config.get(n) as Config;
+            const conf_name = (!!n) ? n : "default";
+            const _config = config.get(conf_name) as Config;
             if(!_config){
                 console.log(chalk.red.bold("This is only valid if you had any config before."));
                 process.exit(1);
@@ -201,6 +202,16 @@ program
             const {model,provider} = await selectProviderandModel();
             config.set(`${n}.provider`,provider);
             config.set(`${n}.model`,model);
+            process.exit(1);
+        }
+
+        if(!n){
+            console.log(chalk.yellowBright.bold("Provide a name for your config using the -n flag"));
+            process.exit(1);
+        }
+
+        if(config.has(n)){
+            console.log(chalk.yellowBright.bold("Config with this name already exists."));
             process.exit(1);
         }
 
@@ -216,7 +227,11 @@ program
     .action(async()=>{
         const all_config = config.store;
         const config_names = Object.keys(all_config).filter((name) => name !== "default");
+        config_names.push("exit");
         const config_s = await selectConfig(config_names);
+
+        if(config_s === "exit") process.exit(1);
+
         const get_config = config.get(config_s) as Config;
 
         const payload = {

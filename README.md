@@ -20,7 +20,7 @@ The binary is exposed as `arka`. Ensure you have Node.js 18+ and a Tavily accoun
 1. `arka configure -n <config_name>` to pick a provider and model (stored as default).
 2. `arka -n <config_name> set-api --api <llm_api_key>` to save the LLM key.
 3. `arka -n <config_name> set-api --search <tavily_api_key>` to enable tool calls.
-4. `arka ask "Who won the recent FIFA World Cup and why?"`
+4. `arka ask "Who won the recent FIFA World Cup ?"`
 
 The spinner shows progress while the agent streams through LangChain; final answers render once tool executions finish.
 

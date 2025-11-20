@@ -1,5 +1,6 @@
 import { TavilySearch } from "@langchain/tavily";
 import fs from 'node:fs'
+import { readFile } from "node:fs/promises";
 import path from 'node:path'
 import { webSearch } from "./tools-def/web_search.js";
 import { currLoc } from "./tools-def/current_loc.js";
@@ -7,17 +8,19 @@ import { makeDir } from "./tools-def/make_dir.js"
 import { writeFile } from "./tools-def/write_file.js";
 import { appendFile } from "./tools-def/append_file.js";
 import { createFile } from "./tools-def/create_file.js"
+import { parsePDF } from "./tools-def/parse_pdf.js"
 import { executeCommand } from "./tools-def/execute_command.js"
 import { Providers, ToolMap } from "./types.js";
-import { exec, execSync } from 'node:child_process';
+import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
+import { PDFParse } from "pdf-parse";
 
 const execAsync = promisify(exec);
 
 
 export class Tools{
     private search_model:TavilySearch;
-    private tool_definition_list:ToolMap[] = [currLoc,makeDir,writeFile,appendFile,createFile,webSearch,executeCommand];
+    private tool_definition_list:ToolMap[] = [currLoc,makeDir,writeFile,appendFile,createFile,webSearch,executeCommand,parsePDF];
     private fn_with_name = [
         ["web_search",this.web_search.bind(this)],
         ["append_file",this.append_file.bind(this)],
@@ -25,7 +28,8 @@ export class Tools{
         ["current_loc",this.current_loc.bind(this)],
         ["make_dir",this.make_dir.bind(this)],
         ["write_file",this.write_file.bind(this)],
-        ["execute_command", this.execute_command.bind(this)]
+        ["execute_command",this.execute_command.bind(this)],
+        ["parse_pdf",this.parse_pdf.bind(this)]
     ]
     getToolFromName = new Map();
 
@@ -146,6 +150,21 @@ export class Tools{
         } catch (error) {
             const err = error as any;
             throw new Error(`Command failed: ${err.message}\nstdout: ${err.stdout}\nstderr: ${err.stderr}`);
+        }
+    }
+
+    async parse_pdf(arg:{path:string}):Promise<string>{
+        const {path} = arg;
+        
+        try{
+            const buffer = await readFile(path);
+            const parser = new PDFParse({data:buffer});
+
+            const result = await parser.getText();
+            parser.destroy();
+            return result.text;
+        }catch(error){
+            return `Error reading this file , Error:${(error as Error).message}`
         }
     }
 }

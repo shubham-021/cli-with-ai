@@ -1,6 +1,6 @@
 {
   "name": "@arka07/clai",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "bin": {
     "arka": "dist/main.js"
@@ -29,11 +29,12 @@
     "inquirer": "^12.11.1",
     "langchain": "^1.0.4",
     "ora": "^9.0.0",
+    "pdf-parse": "^2.4.5",
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "ts-node": "^10.9.2",
     "@types/inquirer": "^9.0.9",
-    "@types/node": "^24.10.1"
+    "@types/node": "^24.10.1",
+    "ts-node": "^10.9.2"
   }
 }

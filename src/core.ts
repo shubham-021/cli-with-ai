@@ -50,7 +50,7 @@ class LLMCore{
             const tool_arg = toolCall.args;
             const tool_id = toolCall.id;
 
-            console.log(chalk.greenBright.bold("Running: " , tool_name,"\n"));
+            console.log(chalk.greenBright.bold("\nRunning: " , tool_name,"\n"));
             const tool = await this.getToolFromName.get(tool_name);
             let toolResult;
 
@@ -116,7 +116,7 @@ class LLMCore{
             const tool_arg = toolCall.args;
             const tool_id = toolCall.id;
 
-            console.log("tool_name: " , tool_name , "\ntool_arg: ",JSON.stringify(tool_arg));
+            // console.log("tool_name: " , tool_name , "\ntool_arg: ",JSON.stringify(tool_arg));
 
             const tool = tools.get(tool_name);
             let toolResult;

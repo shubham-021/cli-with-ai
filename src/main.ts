@@ -255,9 +255,105 @@ program
 //     '5'                              // process.argv[4]
 // ]
 
-if (!process.argv.slice(2).length) {
+async function interactiveShell() {
     console.log(chalk.cyan(figlet.textSync("Arka",{horizontalLayout:"full",verticalLayout:"full",width:180})));
-    // program.outputHelp();
+    console.log(chalk.yellow("\nEntering interactive mode. Type 'q' or 'quit' to exit, or 'help' for commands."));
+
+    const handleAsk = async (query:string) => {
+        const spinner = ora({spinner:"dots8Bit"}).start();
+        const default_config = config.get("default") as string;
+        if(!default_config){
+            console.log(chalk.redBright.bold("You have not configured your cli yet"));
+            return;
+        }
+        const set_config = config.get(default_config) as Config;
+        // console.log(JSON.stringify(set_config));
+        if(!set_config){
+            spinner.fail("You haven't configured your provider and model yet");
+            return;
+        }else{
+            const search_api = set_config.search_api;
+            const api = set_config.api;
+
+            if (!api && !search_api) {
+                spinner.fail("Api not found, Please set api for llm provider and search agent");
+                return;
+            }
+            
+            if (!api) {
+                spinner.fail("Api not found, Please set api for your provider");
+                return;
+            }
+            
+            if (!search_api) {
+                spinner.fail("Search api not found, Please set api for your search agent");
+                return;
+            }
+
+            try {
+                const llm = new LLMCore(set_config.provider,set_config.model,api,search_api);
+                const res = await llm.router(query);
+                spinner.stop();
+                console.log(chalk.cyan.bold("\n🤖: ",res));
+                // for await (const chunk of stream) {
+                //     process.stdout.write(chunk);
+                // }
+                console.log("\n");
+            } catch (error) {
+                spinner.fail('Failed to get response');
+                console.error(chalk.red((error as Error).message));
+            }
+        }
+    };
+
+    while(true){
+        try{
+            const answer = await inquirer.prompt([{
+                type: 'input',
+                name: 'command',
+                message: chalk.cyan.bold('arka > ')
+            }]);
+
+            const input = answer.command.trim();
+
+            if(input.toLowerCase() === 'q' || input.toLowerCase() === 'quit'){
+                console.log(chalk.green("Exiting interactive mode. GoodBye!"));
+                break;
+            }
+
+            if(input.toLowerCase() === 'help'){
+                console.log(chalk.yellow(`
+                    Available commands:
+                      - Your Question: Just type your question and press Enter (e.g., Who won the recent World Cup?)
+                      - q or quit: Exit the interactive shell.
+                      - ctrl+c: Also exits the shell.
+                      
+                    To use configuration commands like \`configure\` or \`set-api\`, you must run them from your regular terminal:
+                      $ arka configure -n myconfig
+                      $ arka set-api --api <key>
+                `));
+
+                continue;
+            }
+
+            if(input.length > 0){
+                await handleAsk(input);
+            }
+        }catch(error){
+            if((error as any).isTtyError){
+                console.error(chalk.red("Prompt error: Cannot run interactive shell in this terminal environment."));
+            }else{
+                console.error(chalk.red("An error occurred in the interactive shell: "),(error as Error).message);
+            };
+            break;
+        }
+    }
 }
 
-program.parse(process.argv);
+if (!process.argv.slice(2).length) {
+    // console.log(chalk.cyan(figlet.textSync("Arka",{horizontalLayout:"full",verticalLayout:"full",width:180})));
+    // program.outputHelp();
+    interactiveShell();
+}else{
+    program.parse(process.argv);
+}

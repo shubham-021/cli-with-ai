@@ -1,12 +1,14 @@
 import { TavilySearch } from "@langchain/tavily";
-import fs from 'node:fs'
-import { readFile } from "node:fs/promises";
+import { stat,readFile,unlink,rm, rename, copyFile, mkdir, writeFile, appendFile } from "node:fs/promises";
 import path from 'node:path'
 import {all_def} from "./tools-def/all_def.js"
 import { Providers, ToolMap } from "./types.js";
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { PDFParse } from "pdf-parse";
+import inquirer from "inquirer";
+import {  glob } from 'glob';
+import { getListPrompt_In } from "./inquirer.js";
 
 const execAsync = promisify(exec);
 
@@ -16,14 +18,19 @@ export class Tools{
     private tool_definition_list:ToolMap[] = all_def;
     private fn_with_name = [
         ["web_search",this.web_search.bind(this)],
-        ["append_file",this.append_file.bind(this)],
-        ["create_file",this.create_file.bind(this)],
-        ["current_loc",this.current_loc.bind(this)],
-        ["make_dir",this.make_dir.bind(this)],
-        ["write_file",this.write_file.bind(this)],
-        ["execute_command",this.execute_command.bind(this)],
-        ["parse_pdf",this.parse_pdf.bind(this)],
-        ["read_file",this.read_file.bind(this)]
+        ["append_file",this.append_file],
+        ["create_file",this.create_file],
+        ["current_loc",this.current_loc],
+        ["make_dir",this.make_dir],
+        ["write_file",this.write_file],
+        ["execute_command",this.execute_command],
+        ["parse_pdf",this.parse_pdf],
+        ["read_file",this.read_file],
+        ["copy_file",this.copy_file],
+        ["delete_file_dir",this.delete_file_dir],
+        ["move_file",this.move_file],
+        ["http_request",this.http_request],
+        ["search_in_files",this.search_in_files]
     ]
     getToolFromName = new Map();
 
@@ -49,17 +56,17 @@ export class Tools{
         return process.cwd();
     }
 
-    make_dir(arg: { path: string }){
+    async make_dir(arg: { path: string }){
         const { path: dirPath } = arg;
         const full = path.resolve(process.cwd(), dirPath);
         if (!full.startsWith(process.cwd())) {
             throw new Error("Refusing to create directories outside project");
         }
-        fs.mkdirSync(full,{recursive:true});
+        await mkdir(full,{recursive:true});
         return `Directory created at: ${full}`;
     }
 
-    create_file(arg: { path: string }) {
+    async create_file(arg: { path: string }) {
         const { path: targetPath } = arg;
         const full = path.resolve(process.cwd(), targetPath);
     
@@ -68,14 +75,14 @@ export class Tools{
         }
     
         const dir = path.dirname(full);
-        fs.mkdirSync(dir, { recursive: true });
+        await mkdir(dir, { recursive: true });
     
-        fs.writeFileSync(full, "");
+        await writeFile(full, "");
     
         return `File created at: ${full}`;
     }
 
-    write_file(arg: { path: string; content: string }) {
+    async write_file(arg: { path: string; content: string }) {
         const { path: targetPath, content } = arg;
         const full = path.resolve(process.cwd(), targetPath);
     
@@ -84,14 +91,14 @@ export class Tools{
         }
     
         const dir = path.dirname(full);
-        fs.mkdirSync(dir, { recursive: true });
+        await mkdir(dir, { recursive: true });
     
-        fs.writeFileSync(full, content);
+        await writeFile(full, content);
     
         return `Wrote content to: ${full}`;
     }
 
-    append_file(arg: { path: string; content: string }) {
+    async append_file(arg: { path: string; content: string }) {
         const { path: targetPath, content } = arg;
         const full = path.resolve(process.cwd(), targetPath);
     
@@ -100,9 +107,9 @@ export class Tools{
         }
     
         const dir = path.dirname(full);
-        fs.mkdirSync(dir, { recursive: true });
+        mkdir(dir, { recursive: true });
     
-        fs.appendFileSync(full, content);
+        appendFile(full, content);
     
         return `Appended content to: ${full}`;
     }    
@@ -124,6 +131,10 @@ export class Tools{
                 throw new Error(`Dangerous command blocked: ${command}`);
             }
         }
+
+        const choice = await getListPrompt_In(["Proceed","Cancel"],`Running command ${command}`);
+
+        if(choice !== "Proceed") return "User prevented command from execution";
         
         if (!workingDir.startsWith(process.cwd())) {
             throw new Error("Cannot execute commands outside project directory");
@@ -169,5 +180,109 @@ export class Tools{
         const text = buffer.toString();
 
         return text;
+    }
+
+    async delete_file_dir(arg:{path:string , recursive?: boolean}):Promise<string>{
+        try {
+            const {path:targetPath , recursive=false} = arg;
+            if(!path) throw new Error('Path is not specified');
+
+            const fullPath = path.resolve(process.cwd(),targetPath);
+
+            if(!fullPath.startsWith(process.cwd())) throw new Error('Refusing to delete files outside the project');
+
+            const stats = await stat(fullPath);
+
+            if(stats.isDirectory()){
+                if(recursive){
+                    await rm(fullPath,{recursive: true, force:true});
+                    return 'Deleted Directory';
+                }else{
+                    throw new Error('Use recursive=true to delete directories');
+                }    
+            }else{
+                await unlink(fullPath);
+                return `Deleted file: ${fullPath}`;
+            }
+        } catch (error) {
+            throw new Error((error as Error).message)
+        }
+    }
+
+    async move_file(arg:{source:string, destination:string}):Promise<string>{
+        const {source , destination} = arg;
+
+        const fullSource = path.resolve(process.cwd(),source);
+        const fullDest = path.resolve(process.cwd(),destination);
+
+        if(!fullSource.startsWith(process.cwd()) || !fullDest.startsWith(process.cwd())){
+            throw new Error('Refusing to move files outside project');
+        }
+
+        await rename(fullSource,fullDest);
+        return `Moved ${source} to ${destination}`;
+    }
+
+    async copy_file(arg:{source:string, destination:string}):Promise<string>{
+        const {source , destination} = arg;
+
+        const fullSource = path.resolve(process.cwd(),source);
+        const fullDest = path.resolve(process.cwd(),destination);
+
+        if(!fullSource.startsWith(process.cwd()) || !fullDest.startsWith(process.cwd())){
+            throw new Error('Refusing to copy files outside project');
+        }
+
+        await copyFile(fullSource,fullDest);
+        return `Copied ${source} to ${destination}`;
+    }
+
+    async search_in_files(arg:{query:string,path?:string,filePattern?:string,caseSensitive?:boolean}){
+        const {query,path:searchPath = '.',filePattern = '**/*',caseSensitive = false} = arg;
+        const files = await glob(filePattern,{
+            cwd: path.resolve(process.cwd(),searchPath),
+            ignore: ['node_modules/**','.git/**','dist/**']
+        });
+
+        const results: Array<{file:string,line:number,content:string}> = [];
+        const regex = new RegExp(query,caseSensitive ? 'g' : 'gi');
+
+        for(const file of files){
+            const content = await readFile(file,'utf-8');
+            const lines = content.split('\n');
+
+            lines.forEach((line,index) => {
+                if(regex.test(line)){
+                    results.push({
+                        file,
+                        line: index+1,
+                        content: line.trim()
+                    });
+                }
+            })
+        }
+
+        return results.map(r => `${r.file}:${r.line}:${r.content}`).join('\n');
+    }
+
+    async http_request(arg: {
+        url:string,
+        method?: 'GET' | 'POST' | 'PUT' | 'DELETE',
+        headers?: Record<string,string>,
+        body?:any
+    }){
+        const {url,method='GET',headers={},body} = arg;
+
+        const response = await fetch(url,{
+            method,
+            headers:{
+                'Content-Type':'application/json',
+                ...headers
+            },
+            body: body ? JSON.stringify(body) : undefined
+        });
+
+        const data = await response.json();
+        return JSON.stringify(data,null,2);
     }
 }

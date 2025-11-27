@@ -1,6 +1,6 @@
 {
   "name": "@arka07/clai",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "",
   "bin": {
     "arka": "dist/main.js"
@@ -26,6 +26,7 @@
     "commander": "^14.0.2",
     "conf": "^15.0.2",
     "figlet": "^1.9.3",
+    "glob": "^13.0.0",
     "inquirer": "^12.11.1",
     "langchain": "^1.0.4",
     "ora": "^9.0.0",

@@ -156,5 +156,157 @@ const read_file = get_def({
     required: ["path"]
 });
 
+const delete_file_dir = get_def({
+    name: "delete_file_dir",
+    description: "Delete any file or directory",
+    properties: {
+        openai: {
+            path: { type: "string" , description: "File or directory path to be deleted"},
+            recursive: { type: "boolean" , description: "True for directory , false for file"}
+        },
+        gemini: {
+            path: { type: "string"},
+            recursive: { type: "boolean" }
+        },
+        claude: {
+            path: { type: "string"},
+            recursive: { type: "boolean" }
+        }
+    },
+    required: ["path"]
+});
 
-export const all_def = [web_search, parse_pdf, write_file, execute_command, curr_loc, make_dir, create_file, append_file, read_file];
+const move_file = get_def({
+    name: "move_file",
+    description: "Move any file",
+    properties: {
+        openai: {
+            source: { type: "string" , description: "File path to be moved"},
+            destination: { type: "string" , description: "Destination path , where file has to be moved"}
+        },
+        gemini: {
+            source: { type: "string"},
+            destination: { type: "string" }
+        },
+        claude: {
+            source: { type: "string"},
+            destination: { type: "string" }
+        }
+    },
+    required: ["source","destination"]
+});
+
+const copy_file = get_def({
+    name: "copy_file",
+    description: "Copy any file",
+    properties: {
+        openai: {
+            source: { type: "string" , description: "File path to be copied"},
+            destination: { type: "string" , description: "Destination path , where file has to be copied"}
+        },
+        gemini: {
+            source: { type: "string"},
+            destination: { type: "string" }
+        },
+        claude: {
+            source: { type: "string"},
+            destination: { type: "string" }
+        }
+    },
+    required: ["source","destination"]
+});
+
+const search_in_files = get_def({
+    name: "search_in_files",
+    description: "Search for a specific query string within files in a directory, supporting glob patterns and case sensitivity.",
+    properties: {
+        openai: {
+            query: { 
+                type: "string", 
+                description: "The string query to search for within the file contents."
+            },
+            path: { 
+                type: "string", 
+                description: "The directory path to start the search from (optional, defaults to '.')."
+            },
+            filePattern: { 
+                type: "string", 
+                description: "A glob pattern to filter which files to search (optional, defaults to '**/*')."
+            },
+            caseSensitive: {
+                type: "boolean",
+                description: "If true, the search will be case-sensitive (optional, defaults to false)."
+            }
+        },
+        gemini: {
+            query: { type: "string" },
+            path: { type: "string" },
+            filePattern: { type: "string" },
+            caseSensitive: { type: "boolean" }
+        },
+        claude: {
+            query: { type: "string" },
+            path: { type: "string" },
+            filePattern: { type: "string" },
+            caseSensitive: { type: "boolean" }
+        }
+    },
+    required: ["query"]
+});
+
+const http_request = get_def({
+    name: "http_request",
+    description: "Perform an HTTP request to a specified URL, supporting GET, POST, PUT, and DELETE methods, custom headers, and a JSON body.",
+    properties: {
+        openai: {
+            url: { 
+                type: "string", 
+                description: "The URL to send the HTTP request to."
+            },
+            method: { 
+                type: "string", 
+                enum: ['GET', 'POST', 'PUT', 'DELETE'],
+                description: "The HTTP method to use (optional, defaults to 'GET')."
+            },
+            headers: { 
+                type: "object", 
+                description: "A dictionary of custom headers to include in the request (optional)."
+            },
+            body: {
+                type: "object",
+                description: "The request body, which will be automatically stringified as JSON (required for POST/PUT, optional otherwise)."
+            }
+        },
+        gemini: {
+            url: { type: "string" },
+            method: { type: "string", enum: ['GET', 'POST', 'PUT', 'DELETE'] },
+            headers: { type: "object" },
+            body: { type: "object" }
+        },
+        claude: {
+            url: { type: "string" },
+            method: { type: "string", enum: ['GET', 'POST', 'PUT', 'DELETE'] },
+            headers: { type: "object" },
+            body: { type: "object" }
+        }
+    },
+    required: ["url"]
+});
+
+
+export const all_def = [
+    web_search,
+    parse_pdf, 
+    write_file, 
+    execute_command, 
+    curr_loc,
+    make_dir, 
+    create_file, 
+    append_file, 
+    read_file,
+    delete_file_dir,
+    move_file,
+    copy_file,
+    search_in_files,
+    http_request
+];

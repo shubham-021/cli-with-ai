@@ -49,6 +49,8 @@ class LLMCore {
             const tool_arg = toolCall.args;
             const tool_id = toolCall.id;
 
+            // console.log(tool_name);
+
             // console.log(chalk.greenBright.bold("\nRunning: ", tool_name, "\n"));
             const tool = await this.getToolFromName.get(tool_name);
             let toolResult;
@@ -155,6 +157,8 @@ class LLMCore {
                 day: "numeric"
             })
 
+            // console.log('Router Date: ', currentDate);
+
             try {
                 spinner_think.stop();
                 // console.log("here trycatch\n");
@@ -202,8 +206,9 @@ class LLMCore {
             { role: 'user', content: ask }
         ];
 
-
+        console.log("search: ", currentDate);
         const PROMPT = get_simple_prompt(currentDate);
+        // console.log('Prompt: ', PROMPT);
         const messages: Message[] = [
             new SystemMessage(`
                 <UserPreferences>
@@ -221,7 +226,7 @@ class LLMCore {
             new HumanMessage(ask)
         ];
 
-        console.log(`${MessagesMappedToTools.get("search")} ${toolArgs.query}\n`);
+        // console.log(`\n${MessagesMappedToTools.get("search")} ${toolArgs.query}\n`);
         let res = await this.searchLLM.invoke(messages, { tools: this.toolDefinition, tool_choice: "auto" });
         if (res.tool_calls && res.tool_calls.length > 0) {
             res = await this.call_tool(res, messages, "search");

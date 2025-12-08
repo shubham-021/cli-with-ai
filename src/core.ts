@@ -1,7 +1,7 @@
 import { HumanMessage, SystemMessage, AIMessage } from "langchain";
 import { Providers, ProviderMap, Message, ChatModels, ToolsTypes, MessagesMappedToTools, Message_memory, LTMESSAGETYPE } from "./types.js";
 import { Tools } from "./tools.js";
-import { get_simple_prompt } from "./prompt/simple.js"
+import { S_PROMPT } from "./prompt/simple.js"
 import { get_planner_prompt } from "./prompt/planner.js"
 import { load_LTMemory, load_STMemory, saveLTMemory, saveSTMemory } from "./memory/memory.js";
 import { get_executer_prompt } from "./prompt/executer.js";
@@ -77,11 +77,11 @@ class LLMCore {
 
         messages.push(new AIMessage(`
             <UpdatedPreviousConversations>
-                ${load_STMemory()}
+                ${JSON.stringify(load_STMemory())}
             </UpdatedPreviousConversations>
         `))
 
-        // console.log("Messages: ",JSON.stringify(messages));
+        // console.log("Messages: ", JSON.stringify(messages, null, 2));
         let newRes: any;
         if (which === "build") newRes = await this.buildLLM.invoke(messages, { tools: this.toolDefinition, tool_choice: "auto" });
         else if (which === "search") newRes = await this.searchLLM.invoke(messages, { tools: this.toolDefinition, tool_choice: "auto" });
@@ -123,7 +123,7 @@ class LLMCore {
         const messages: Message[] = [
             new SystemMessage(`
                 <PreviousConverstations>
-                    ${memory}
+                    ${JSON.stringify(memory)}
                 </PreviousConverstations>
 
                 <Intructions>
@@ -207,21 +207,24 @@ class LLMCore {
         ];
 
         console.log("search: ", currentDate);
-        const PROMPT = get_simple_prompt(currentDate);
         // console.log('Prompt: ', PROMPT);
         const messages: Message[] = [
             new SystemMessage(`
                 <UserPreferences>
-                    ${long_memory}
+                    ${JSON.stringify(long_memory)}
                 </UserPreferences>
 
                 <PreviousConverstaions>
-                    Previous conversations: ${short_memory}
+                    ${JSON.stringify(short_memory)}
                 </PreviousConverstaions>
 
                 <Instruction>
-                    ${PROMPT}
+                    ${S_PROMPT}
                 </Instruction>
+
+                <CurrentDate>
+                    ${currentDate}
+                </CurrentDate>
             `),
             new HumanMessage(ask)
         ];

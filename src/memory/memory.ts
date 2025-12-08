@@ -32,6 +32,14 @@ export function load_STMemory(): Array<Message_memory> {
     }
 }
 
+export function delete_curr_STMemory() {
+    try {
+        fs.unlinkSync(STM_FILE);
+    } catch (e) {
+        return;
+    }
+}
+
 export function saveLTMemory(preference: string) {
     try {
         if (!fs.existsSync(MEM_DIR)) {
@@ -41,7 +49,7 @@ export function saveLTMemory(preference: string) {
         const prev_messages = load_LTMemory();
         prev_messages.push(preference);
 
-        fs.writeFileSync(LTM_FILE, JSON.stringify(prev_messages), "utf-8");
+        fs.writeFileSync(LTM_FILE, JSON.stringify(prev_messages, null, 2), "utf-8");
     } catch (e) {
         console.error("Failed to save memory: ", e);
     }
@@ -56,7 +64,7 @@ export function saveSTMemory(messages: Message_memory[]) {
         const prev_messages = load_STMemory();
         for (const msg of messages) prev_messages.push(msg);
 
-        fs.writeFileSync(STM_FILE, JSON.stringify(prev_messages), "utf-8");
+        fs.writeFileSync(STM_FILE, JSON.stringify(prev_messages, null, 2), "utf-8");
     } catch (e) {
         console.error("Failed to save memory: ", e);
     }

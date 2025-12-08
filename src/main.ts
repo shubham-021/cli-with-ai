@@ -8,6 +8,7 @@ import Conf from 'conf';
 import LLMCore from "./core.js";
 import { getInputPrompt_In, getListPrompt_In } from "./inquirer.js";
 import { Config, getModelsForProvider, Providers } from "./types.js";
+import { delete_curr_STMemory } from "./memory/memory.js";
 
 const program = new Command();
 const config = new Conf({ projectName: 'arka-cli' });
@@ -369,6 +370,12 @@ async function interactiveShell() {
         }
     }
 }
+
+process.on('exit', delete_curr_STMemory);
+
+process.on('SIGHUP', () => process.exit(0));
+process.on('SIGINT', () => process.exit(0));
+process.on('SIGTERM', () => process.exit(0));
 
 if (!process.argv.slice(2).length) {
     // console.log(chalk.cyan(figlet.textSync("Arka",{horizontalLayout:"full",verticalLayout:"full",width:180})));

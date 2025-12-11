@@ -1,19 +1,18 @@
-import { AIMessage, HumanMessage, SystemMessage } from 'langchain';
-import { ChatModels, Message, Providers } from '../types.js';
+import { ChatProvider, ChatMessage, Providers } from '../providers/index.js';
 import { ToolRegistry } from '../tools/registry.js';
 import { getSystemPrompt } from './system-prompt.js';
 import { load_STMemory, load_LTMemory, saveSTMemory } from '../memory/memory.js';
 import { getListPrompt_In } from '../inquirer.js';
 
-const MAX_STEPS = 20;  // Like AI SDK's stepCountIs(20)
+const MAX_STEPS = 20;
 
 export class ReActAgent {
-    private llm: ChatModels;
+    private llm: ChatProvider;
     private toolRegistry: ToolRegistry;
     private provider: Providers;
 
     constructor(options: {
-        llm: ChatModels;
+        llm: ChatProvider;
         toolRegistry: ToolRegistry;
         provider: Providers;
     }) {
@@ -29,10 +28,12 @@ export class ReActAgent {
             shortTermMemory: load_STMemory(),
             longTermMemory: load_LTMemory()
         });
-        const messages: Message[] = [
-            new SystemMessage(systemPrompt),
-            new HumanMessage(query)
+
+        const messages: ChatMessage[] = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: query }
         ];
+
         const tools = this.toolRegistry.getForProvider(this.provider);
         let stepCount = 0;
         while (stepCount < MAX_STEPS) {
@@ -58,7 +59,7 @@ export class ReActAgent {
                 return;
             }
 
-            messages.push(new AIMessage(response));
+            messages.push({ role: 'assistant', content: response.content || '' });
             for (const toolCall of response.tool_calls) {
                 const tool = this.toolRegistry.get(toolCall.name);
 

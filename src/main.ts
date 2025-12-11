@@ -7,7 +7,8 @@ import ora from "ora";
 import Conf from 'conf';
 import LLMCore from "./core.js";
 import { getInputPrompt_In, getListPrompt_In } from "./inquirer.js";
-import { Config, getModelsForProvider, Providers } from "./types.js";
+import { Config, getModelsForProvider } from "./types.js";
+import { Providers } from "./providers/index.js";
 import { delete_curr_STMemory } from "./memory/memory.js";
 
 const program = new Command();

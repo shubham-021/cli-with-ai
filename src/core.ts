@@ -1,4 +1,4 @@
-import { Providers, ProviderMap } from './types.js';
+import { createProvider, Providers } from './providers/index.js';
 import { ReActAgent } from './agent/index.js';
 import { ToolRegistry } from './tools/registry.js';
 import { allTools } from './tools/all.js';
@@ -10,8 +10,7 @@ class LLMCore {
         api: string,
         searchApi: string
     ) {
-        const LLM = ProviderMap[provider];
-        const llm = new LLM({ model, apiKey: api });
+        const llm = createProvider(provider, model, api);
 
         const toolRegistry = new ToolRegistry();
         toolRegistry.registerAll(allTools(searchApi));

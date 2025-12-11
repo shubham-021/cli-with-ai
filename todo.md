@@ -27,3 +27,4 @@
     - Use ReAct arch instead for multi model pipeline
     - current prompt is vague , lots of other issues
     - May fix hallucination
+    - Migrating out of langchain to direct communication with providers

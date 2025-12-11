@@ -1,5 +1,5 @@
 import { ToolDefinition, ToolSet, ToolContext } from './types.js';
-import { Providers } from '../types.js';
+import { Providers } from '../providers/index.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export class ToolRegistry {
@@ -19,7 +19,13 @@ export class ToolRegistry {
 
     getForProvider(provider: Providers): any[] {
         return Object.values(this.tools).map(tool => {
-            const jsonSchema = zodToJsonSchema(tool.inputSchema as any);
+            const fullSchema = zodToJsonSchema(tool.inputSchema as any);
+
+            const jsonSchema = {
+                type: 'object',
+                properties: (fullSchema as any).properties ?? {},
+                required: (fullSchema as any).required ?? []
+            };
 
             switch (provider) {
                 case Providers.OpenAI:

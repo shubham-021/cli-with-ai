@@ -1,7 +1,4 @@
-import { ChatAnthropic } from "@langchain/anthropic";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { ChatOpenAI } from "@langchain/openai";
-import { AIMessage, HumanMessage, SystemMessage } from "langchain";
+import { ChatProvider, ChatMessage, Providers } from './providers/index.js';
 import z from "zod"
 
 export const DEC_PROMPT_RESPONSE = z.object({
@@ -17,9 +14,9 @@ export type Message_memory = { role: 'user' | 'assistant' | 'tool', content: str
 
 export type ToolsTypes = Array<OpenAITool | ClaudeTool | GeminiTool>;
 
-export type ChatModels = ChatOpenAI | ChatGoogleGenerativeAI | ChatAnthropic;
+export type ChatModels = ChatProvider;
 
-export type Message = SystemMessage | HumanMessage | AIMessage | { role: string, content: string, tool_call_id?: string, name: string }
+export type Message = ChatMessage;
 
 export type Config = {
     provider: Providers,
@@ -28,11 +25,6 @@ export type Config = {
     search_api: string
 } | undefined;
 
-export enum Providers {
-    OpenAI = "openai",
-    Gemini = "gemini",
-    Claude = "claude"
-}
 
 export enum OpenAIModels {
     GPT5 = "gpt-5",
@@ -59,12 +51,6 @@ export const ProviderModels: Record<Providers, string[]> = {
     [Providers.Claude]: Object.values(ClaudeModels),
     [Providers.Gemini]: Object.values(GeminiModels),
 }
-
-export const ProviderMap: Record<Providers, any> = {
-    [Providers.OpenAI]: ChatOpenAI,
-    [Providers.Gemini]: ChatGoogleGenerativeAI,
-    [Providers.Claude]: ChatAnthropic
-};
 
 export function getModelsForProvider(provider: Providers): string[] {
     return ProviderModels[provider];

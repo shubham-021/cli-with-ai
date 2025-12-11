@@ -6,7 +6,6 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { PDFParse } from 'pdf-parse';
 import { glob } from 'glob';
-import { TavilySearch } from '@langchain/tavily';
 
 const execAsync = promisify(exec);
 
@@ -26,9 +25,20 @@ export function makeWebSearchTool(tavilyApiKey: string): ToolDefinition<{ query:
             query: z.string().describe('The search query')
         }),
         async execute({ query }) {
-            const search = new TavilySearch({ tavilyApiKey, maxResults: 5 });
-            const results = await search.invoke({ query });
-            return results;
+            const response = await fetch('https://api.tavily.com/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    api_key: tavilyApiKey,
+                    query,
+                    max_results: 5
+                })
+            });
+            if (!response.ok) {
+                throw new Error(`Tavily API error: ${response.status}`);
+            }
+            const data = await response.json();
+            return JSON.stringify(data.results ?? data, null, 2);
         }
     });
 }

@@ -10,5 +10,11 @@
     "strict": true,
     "skipLibCheck": true,
     // "declaration": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "src/_core.ts",
+    "src/v1_tools.ts",
+    "src/tools-def"
+  ]
 }

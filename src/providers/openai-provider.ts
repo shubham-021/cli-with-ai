@@ -13,11 +13,12 @@ export class OpenAIProvider implements ChatProvider {
     async invoke(messages: ChatMessage[], options?: InvokeOptions): Promise<ChatResponse> {
         const body: any = {
             model: this.model,
-            messages: messages.map(m => ({
+            messages: messages.map((m: any) => ({
                 role: m.role,
                 content: m.content,
                 ...(m.tool_call_id && { tool_call_id: m.tool_call_id }),
-                ...(m.name && { name: m.name })
+                ...(m.name && { name: m.name }),
+                ...(m.tool_calls && { tool_calls: m.tool_calls })
             }))
         };
 
@@ -37,6 +38,7 @@ export class OpenAIProvider implements ChatProvider {
 
         if (!response.ok) {
             const error = await response.text();
+            console.error('Full API error:', error);
             throw new Error(`OpenAI API error: ${response.status} - ${error}`);
         }
 

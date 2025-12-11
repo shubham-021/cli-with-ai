@@ -241,16 +241,7 @@ export const executeCommandTool = defineTool({
         command: z.string().describe('The shell command to execute'),
         cwd: z.string().optional().describe('Working directory (optional)')
     }),
-    needsApproval: (input) => {
-        const dangerousPatterns = [
-            /rm\s+-rf\s+\//,
-            /sudo/,
-            />\s*\/dev/,
-            /mkfs/,
-            /dd\s+if=/
-        ];
-        return dangerousPatterns.some(pattern => pattern.test(input.command));
-    },
+    needsApproval: true,
     async execute({ command, cwd: workingDir }, { cwd }) {
         const targetDir = workingDir ? path.resolve(cwd, workingDir) : cwd;
 

@@ -23,8 +23,9 @@
         - Supported languages: JavaScript, TypeScript, Python, Go, Rust, Java, C, C++, C#, Ruby, PHP, Swift, Kotlin, Scala, Elixir, Haskell, and more
 
 ## REFACTOR (IN PROGRESS)
-    - Stronger foundation for tool registering 
-    - Use ReAct arch instead for multi model pipeline
+    - Stronger foundation for tool registering ✔️
+    - Use ReAct arch instead for multi model pipeline ✔️
     - current prompt is vague , lots of other issues
-    - May fix hallucination
-    - Migrating out of langchain to direct communication with providers
+    - May fix hallucination 😞
+    - Migrating out of langchain to direct communication with providers ✔️
+    - Still hallucinating (context management can be better i think)

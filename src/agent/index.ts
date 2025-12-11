@@ -1,8 +1,13 @@
 import { ChatProvider, ChatMessage, Providers } from '../providers/index.js';
+import { formatToolArgs, formatApprovalPrompt } from '../utils/format.js';
 import { ToolRegistry } from '../tools/registry.js';
 import { getSystemPrompt } from './system-prompt.js';
 import { load_STMemory, load_LTMemory, saveSTMemory } from '../memory/memory.js';
 import { getListPrompt_In } from '../inquirer.js';
+import ora from 'ora';
+import chalk from 'chalk';
+import { MessagesMappedToTools } from '../types.js';
+
 
 const MAX_STEPS = 20;
 
@@ -52,10 +57,13 @@ export class ReActAgent {
                 stepCount = 0;
             }
 
+            const spinner = ora({ text: 'Thinking...', spinner: 'dots8Bit' }).start();
             const response = await this.llm.invoke(messages, {
                 tools,
                 tool_choice: 'auto'
             });
+            spinner.stop();
+
             if (!response.tool_calls || response.tool_calls.length === 0) {
                 const stream = this.llm.stream(messages);
                 let fullText = '';
@@ -73,7 +81,19 @@ export class ReActAgent {
                 return;
             }
 
-            messages.push({ role: 'assistant', content: response.content || '' });
+            messages.push({
+                role: 'assistant',
+                content: response.content || '',
+                tool_calls: response.tool_calls?.map(tc => ({
+                    id: tc.id,
+                    type: 'function',
+                    function: {
+                        name: tc.name,
+                        arguments: JSON.stringify(tc.args)
+                    }
+                }))
+            } as any);
+
             for (const toolCall of response.tool_calls) {
                 const tool = this.toolRegistry.get(toolCall.name);
 
@@ -83,10 +103,13 @@ export class ReActAgent {
                         : tool.needsApproval;
 
                     if (shouldApprove) {
+                        console.log(formatApprovalPrompt(toolCall.name, toolCall.args));
+
                         const choice = await getListPrompt_In(
                             ['Approve', 'Deny'],
-                            `Tool "${toolCall.name}" wants to: ${JSON.stringify(toolCall.args)}`
+                            'Allow this action?'
                         );
+
                         if (choice === 'Deny') {
                             messages.push({
                                 role: 'tool',
@@ -99,6 +122,13 @@ export class ReActAgent {
                     }
                 }
 
+                const toolMessage = MessagesMappedToTools.get(toolCall.name) ?? 'Executing';
+                const formattedArgs = formatToolArgs(toolCall.name, toolCall.args);
+                const toolSpinner = ora({
+                    text: chalk.yellow(`${toolMessage}`) + formattedArgs,
+                    spinner: 'dots8Bit'
+                }).start();
+
                 let result: string;
                 try {
                     result = await this.toolRegistry.execute(
@@ -106,8 +136,10 @@ export class ReActAgent {
                         toolCall.args,
                         { cwd: process.cwd() }
                     );
+                    toolSpinner.succeed(chalk.green(`Done: ${toolCall.name}`));
                 } catch (error) {
                     result = `Error: ${(error as Error).message}`;
+                    toolSpinner.fail(chalk.red(`Failed: ${toolCall.name}`));
                 }
                 messages.push({
                     role: 'tool',

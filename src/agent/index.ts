@@ -36,14 +36,28 @@ export class ReActAgent {
 
         const tools = this.toolRegistry.getForProvider(this.provider);
         let stepCount = 0;
-        while (stepCount < MAX_STEPS) {
+
+        while (true) {
             stepCount++;
+
+            if (stepCount > MAX_STEPS) {
+                const choice = await getListPrompt_In(
+                    ['Continue', 'Stop'],
+                    `Reached ${MAX_STEPS} steps. Continue?`
+                );
+                if (choice === 'Stop') {
+                    yield '\n[Stopped at user request]';
+                    return;
+                }
+                stepCount = 0;
+            }
+
             const response = await this.llm.invoke(messages, {
                 tools,
                 tool_choice: 'auto'
             });
             if (!response.tool_calls || response.tool_calls.length === 0) {
-                const stream = await this.llm.stream(messages);
+                const stream = this.llm.stream(messages);
                 let fullText = '';
                 for await (const chunk of stream) {
                     if (chunk.text) {
@@ -103,6 +117,5 @@ export class ReActAgent {
                 });
             }
         }
-        yield '\n[Stopped after maximum steps reached]';
     }
 }

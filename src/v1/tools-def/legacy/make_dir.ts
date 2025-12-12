@@ -1,4 +1,4 @@
-import { ToolMap,Providers } from "../../types.js";
+import { ToolMap, Providers } from "../../../types.js";
 
 export const makeDir: ToolMap = {
     [Providers.OpenAI]: {
@@ -7,39 +7,38 @@ export const makeDir: ToolMap = {
             name: "make_dir",
             description: "Create a directory. Relative paths resolve from current working directory.",
             parameters: {
-            type: "object",
-            properties: {
-                path: { type: "string", description: "Directory path to create" }
-            },
-            required: ["path"]
+                type: "object",
+                properties: {
+                    path: { type: "string", description: "Directory path to create" }
+                },
+                required: ["path"]
             }
         }
     },
-  
+
     [Providers.Gemini]: {
         function_declarations: [{
             name: "make_dir",
             description: "Create a directory. Relative paths resolve from current working directory.",
             parameters: {
-            type: "object",
-            properties: {
-                path: { type: "string" }
-            },
-            required: ["path"]
+                type: "object",
+                properties: {
+                    path: { type: "string" }
+                },
+                required: ["path"]
             }
         }]
     },
-  
+
     [Providers.Claude]: {
         name: "make_dir",
         description: "Create a directory. Relative paths resolve from current working directory.",
         input_schema: {
             type: "object",
             properties: {
-            path: { type: "string" }
+                path: { type: "string" }
             },
             required: ["path"]
         }
     }
 };
-  

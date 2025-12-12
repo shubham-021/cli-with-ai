@@ -1,7 +1,7 @@
-import { Providers, ToolMap } from "../../types.js";
+import { Providers, ToolMap } from "../../../types.js";
 
 export const executeCommand: ToolMap = {
-    [Providers.OpenAI] : {
+    [Providers.OpenAI]: {
         type: "function",
         function: {
             name: "execute_command",
@@ -22,7 +22,7 @@ export const executeCommand: ToolMap = {
             }
         }
     },
-    [Providers.Claude] : {
+    [Providers.Claude]: {
         name: "execute_command",
         description: "Execute shell commands like npm install, npm run dev, git commands, etc.",
         input_schema: {
@@ -40,7 +40,7 @@ export const executeCommand: ToolMap = {
             required: ["command"]
         }
     },
-    [Providers.Gemini] : {
+    [Providers.Gemini]: {
         function_declarations: [{
             name: "execute_command",
             description: "Execute shell commands like npm install, npm run dev, git commands, etc.",
@@ -58,6 +58,6 @@ export const executeCommand: ToolMap = {
                 },
                 required: ["command"]
             }
-        }]  
+        }]
     }
 };

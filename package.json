@@ -1,9 +1,9 @@
 {
-  "name": "@arka07/clai",
-  "version": "1.0.5",
-  "description": "",
+  "name": "@arka07/gloo",
+  "version": "1.0.6",
+  "description": "Your own assistant in your cli",
   "bin": {
-    "arka": "dist/main.js"
+    "gloo": "dist/main.js"
   },
   "type": "module",
   "files": [
@@ -22,15 +22,21 @@
     "conf": "^15.0.2",
     "figlet": "^1.9.3",
     "glob": "^13.0.0",
+    "ink": "^6.5.1",
+    "ink-select-input": "^6.2.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
     "inquirer": "^12.11.1",
     "ora": "^9.0.0",
     "pdf-parse": "^2.4.5",
+    "react": "^19.2.3",
     "zod": "^4.1.12",
     "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.9",
     "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
     "ts-node": "^10.9.2"
   }
 }

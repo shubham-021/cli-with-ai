@@ -98,20 +98,22 @@ export interface ToolMap {
 }
 
 export const MessagesMappedToTools = new Map<string, string>([
-    ["web_search", "Searching the web for"],
-    ["append_file", "Writing in the file"],
-    ["create_file", "Creating the file"],
+    ["web_search", "Searching the web"],
+    ["append_file", "Updating file"],
+    ["create_file", "Creating file"],
     ["current_loc", "Looking for the current location"],
-    ["make_dir", "Making directory on the path"],
-    ["write_file", "Re writing the file"],
-    ["execute_command", "Trying to execute this command"],
-    ["parse_pdf", "Parsing the pdf"],
-    ["read_file", "Reading the file"],
-    ["copy_file", "Making a copy of the file"],
-    ["delete_file_dir", "Deleting"],
-    ["move_file", "Moving the file"],
-    ["http_request", "Making a http request to"],
-    ["search_in_files", "Analyzing"],
-    ["search", "Searching web"],
-    ["build", "Preparing to build for user request"]
+    ["make_dir", "Making directory"],
+    ["write_file", "Updating file"],
+    ["execute_command", "Executing"],
+    ["parse_pdf", "Parsing pdf"],
+    ["read_file", "Reading file"],
+    ["copy_file", "Copy file"],
+    ["delete_file_dir", "Delete"],
+    ["move_file", "Move"],
+    ["http_request", "Making a http request"],
+    ["search_in_files", "Analyze"],
 ]);
+
+export type AgentEvent =
+    | { type: 'text'; content: string }
+    | { type: 'tool'; name: string; message: string };

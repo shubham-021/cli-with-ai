@@ -1,7 +1,7 @@
 import { ChatProvider } from './chat-provider.js';
-import { OpenAIProvider } from './openai-provider.js';
-import { AnthropicProvider } from './anthropic-provider.js';
-import { GeminiProvider } from './gemini-provider.js';
+import { OpenAIProvider } from './openai.js';
+import { AnthropicProvider } from './anthropic.js';
+import { GeminiProvider } from './gemini.js';
 
 export enum Providers {
     OpenAI = 'openai',

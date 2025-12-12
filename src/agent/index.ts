@@ -4,14 +4,12 @@ import { ToolRegistry } from '../tools/registry.js';
 import { getSystemPrompt } from './system-prompt.js';
 import { load_STMemory, load_LTMemory, saveSTMemory } from '../memory/memory.js';
 import { getListPrompt_In } from '../inquirer.js';
-import ora from 'ora';
-import chalk from 'chalk';
-import { MessagesMappedToTools } from '../types.js';
-
+import { AgentEvent, MessagesMappedToTools } from '../types.js';
+import { getArgPreview } from '../utils/argPreview.js';
 
 const MAX_STEPS = 20;
 
-export class ReActAgent {
+export class Agent {
     private llm: ChatProvider;
     private toolRegistry: ToolRegistry;
     private provider: Providers;
@@ -26,7 +24,7 @@ export class ReActAgent {
         this.provider = options.provider;
     }
 
-    async *run(query: string): AsyncGenerator<string> {
+    async *run(query: string): AsyncGenerator<AgentEvent> {
         const systemPrompt = getSystemPrompt({
             cwd: process.cwd(),
             date: new Date().toLocaleDateString(),
@@ -51,25 +49,23 @@ export class ReActAgent {
                     `Reached ${MAX_STEPS} steps. Continue?`
                 );
                 if (choice === 'Stop') {
-                    yield '\n[Stopped at user request]';
+                    yield { type: 'text', content: '\n[Stopped at user request]' };
                     return;
                 }
                 stepCount = 0;
             }
 
-            const spinner = ora({ text: 'Thinking...', spinner: 'dots8Bit' }).start();
             const response = await this.llm.invoke(messages, {
                 tools,
                 tool_choice: 'auto'
             });
-            spinner.stop();
 
             if (!response.tool_calls || response.tool_calls.length === 0) {
                 const stream = this.llm.stream(messages);
                 let fullText = '';
                 for await (const chunk of stream) {
                     if (chunk.text) {
-                        yield chunk.text;
+                        yield { type: 'text', content: chunk.text };
                         fullText += chunk.text;
                     }
                 }
@@ -123,11 +119,8 @@ export class ReActAgent {
                 }
 
                 const toolMessage = MessagesMappedToTools.get(toolCall.name) ?? 'Executing';
-                const formattedArgs = formatToolArgs(toolCall.name, toolCall.args);
-                const toolSpinner = ora({
-                    text: chalk.yellow(`${toolMessage}`) + formattedArgs,
-                    spinner: 'dots8Bit'
-                }).start();
+                const argPreview = getArgPreview(toolCall.name, toolCall.args);
+                yield { type: 'tool', name: toolCall.name, message: `${toolMessage}${argPreview}` };
 
                 let result: string;
                 try {
@@ -136,10 +129,8 @@ export class ReActAgent {
                         toolCall.args,
                         { cwd: process.cwd() }
                     );
-                    toolSpinner.succeed(chalk.green(`Done: ${toolCall.name}`));
                 } catch (error) {
                     result = `Error: ${(error as Error).message}`;
-                    toolSpinner.fail(chalk.red(`Failed: ${toolCall.name}`));
                 }
                 messages.push({
                     role: 'tool',

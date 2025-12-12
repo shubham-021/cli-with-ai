@@ -1,4 +1,4 @@
-import { ToolMap, Providers } from "../../../types.js";
+import { ToolMap, Providers } from "../../../../types.js";
 
 export const build: ToolMap = {
     [Providers.OpenAI]: {
@@ -24,7 +24,7 @@ export const build: ToolMap = {
                 parameters: {
                     type: "object",
                     properties: {
-                        query: { type: "string"}
+                        query: { type: "string" }
                     },
                     required: ["query"]
                 }

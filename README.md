@@ -1,6 +1,6 @@
-# Arka CLI
+# Gloo CLI
 
-A conversational AI assistant for the terminal. Configure multiple LLM providers, store credentials locally, and chat with an AI assistant directly from your shell.
+Your pocket AI assistant in the terminal. Configure multiple LLM providers, store credentials locally, and chat with an AI assistant directly from your shell.
 
 ## Supported Providers
 
@@ -26,8 +26,8 @@ npm install -g @arka07/clai
 ### From Source
 
 ```sh
-git clone https://github.com/shubham-021/cli-with-ai.git
-cd cli-with-ai
+git clone https://github.com/shubham-021/gloo.git
+cd gloo
 pnpm install
 pnpm exec tsc
 node dist/main.js
@@ -37,35 +37,35 @@ node dist/main.js
 
 1. Configure a provider and model:
 ```sh
-arka configure -n myconfig
+gloo configure -n myconfig
 ```
 
 2. Set your API keys:
 ```sh
-arka set-api -n myconfig --api YOUR_PROVIDER_API_KEY --search YOUR_TAVILY_KEY
+gloo set-api -n myconfig --api YOUR_PROVIDER_API_KEY --search YOUR_TAVILY_KEY
 ```
 
 3. Start asking questions:
 ```sh
-arka ask "What is the capital of France?"
+gloo ask "What is the capital of France?"
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `arka configure -n <name>` | Create a new configuration with provider and model selection |
-| `arka set-api -n <name> --api <key> --search <key>` | Set API keys for a configuration |
-| `arka ask <question>` | Ask a question using the default configuration |
-| `arka switch -n <name>` | Switch the default configuration |
-| `arka see-config` | View saved configurations |
-| `arka see-api` | View current API key status |
-| `arka delete-config -n <name>` | Delete a configuration |
-| `arka` | Launch interactive shell mode |
+| `gloo configure -n <name>` | Create a new configuration with provider and model selection |
+| `gloo set-api -n <name> --api <key> --search <key>` | Set API keys for a configuration |
+| `gloo ask <question>` | Ask a question using the default configuration |
+| `gloo switch -n <name>` | Switch the default configuration |
+| `gloo see-config` | View saved configurations |
+| `gloo see-api` | View current API key status |
+| `gloo delete-config -n <name>` | Delete a configuration |
+| `gloo` | Launch interactive shell mode |
 
 ## Interactive Mode
 
-Run `arka` without arguments to enter interactive mode. Type your questions and press Enter. Type `q` or `quit` to exit.
+Run `gloo` without arguments to enter interactive mode. Type your questions and press Enter. Type `q` or `quit` to exit.
 
 ## Project Structure
 
@@ -77,5 +77,5 @@ src/
   providers/        Direct API clients for each provider
   tools/            Tool definitions and registry
   memory/           Conversation memory management
+  ui/               Ink + React terminal UI components
 ```
-

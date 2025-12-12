@@ -5,6 +5,7 @@ import { Banner, Spinner, StatusBar, Message, TextInput } from './components/ind
 import { theme } from './theme.js';
 import LLMCore from '../core.js';
 import { Config } from '../types.js';
+import { ToolActivity } from './components/ToolActivity.js';
 
 const config = new Conf({ projectName: 'gloo-cli' });
 
@@ -20,6 +21,7 @@ export function App() {
     const [isLoading, setIsLoading] = useState(false);
     const [streamingText, setStreamingText] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [currentTool, setCurrentTool] = useState<string | null>(null);
 
 
     const defaultConfig = config.get('default') as string | undefined;
@@ -68,9 +70,14 @@ export function App() {
             );
 
             let fullResponse = '';
-            for await (const chunk of llm.chat(trimmed)) {
-                fullResponse += chunk;
-                setStreamingText(fullResponse);
+            for await (const event of llm.chat(trimmed)) {
+                if (event.type === 'text') {
+                    setCurrentTool(null);
+                    fullResponse += event.content;
+                    setStreamingText(fullResponse);
+                } else if (event.type === 'tool') {
+                    setCurrentTool(event.message);
+                }
             }
 
             setMessages(prev => [...prev, { role: 'assistant', content: fullResponse }]);
@@ -79,6 +86,7 @@ export function App() {
             setError((err as Error).message);
         } finally {
             setIsLoading(false);
+            setCurrentTool(null);
         }
     }
 
@@ -98,6 +106,10 @@ export function App() {
                     <Box paddingLeft={1} marginY={1}>
                         <Spinner message='Thinking ...' />
                     </Box>
+                )}
+
+                {currentTool && (
+                    <ToolActivity message={currentTool} isActive={true} />
                 )}
 
                 {error && (

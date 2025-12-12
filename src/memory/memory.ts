@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { Message_memory } from "../types";
+import { Message_memory } from "../types.js";
 
 const MEM_DIR = path.join(os.homedir(), ".arkacli");
 

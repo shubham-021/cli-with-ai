@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { render } from 'ink';
+import React from 'react';
+import { App } from './ui/App.js';
 import { Command } from "commander";
 import chalk from "chalk";
 import figlet from "figlet";
@@ -12,7 +15,7 @@ import { Providers } from "./providers/index.js";
 import { delete_curr_STMemory } from "./memory/memory.js";
 
 const program = new Command();
-const config = new Conf({ projectName: 'arka-cli' });
+const config = new Conf({ projectName: 'gloo-cli' });
 
 program
     .version("0.0.1")
@@ -282,6 +285,12 @@ program
 //     '5'                              // process.argv[4]
 // ]
 
+
+async function interactiveShell() {
+    render(React.createElement(App));
+}
+
+/*
 async function interactiveShell() {
     console.log(chalk.cyan(figlet.textSync("Arka", { horizontalLayout: "full", verticalLayout: "full", width: 180 })));
     console.log(chalk.yellow("\nEntering interactive mode. Type 'q' or 'quit' to exit, or 'help' for commands."));
@@ -376,6 +385,7 @@ async function interactiveShell() {
         }
     }
 }
+*/
 
 process.on('exit', delete_curr_STMemory);
 

@@ -1,4 +1,4 @@
-import { ToolMap,Providers } from "../../types.js";
+import { ToolMap, Providers } from "../../../types.js";
 
 export const writeFile: ToolMap = {
     [Providers.OpenAI]: {
@@ -7,42 +7,41 @@ export const writeFile: ToolMap = {
             name: "write_file",
             description: "Write content to a file. Overwrites existing content.",
             parameters: {
-            type: "object",
-            properties: {
-                path: { type: "string", description: "File path to write to" },
-                content: { type: "string", description: "Content to write" }
-            },
-            required: ["path", "content"]
+                type: "object",
+                properties: {
+                    path: { type: "string", description: "File path to write to" },
+                    content: { type: "string", description: "Content to write" }
+                },
+                required: ["path", "content"]
             }
         }
     },
-  
+
     [Providers.Gemini]: {
         function_declarations: [{
             name: "write_file",
             description: "Write content to a file. Overwrites existing content.",
             parameters: {
-            type: "object",
-            properties: {
-                path: { type: "string" },
-                content: { type: "string" }
-            },
-            required: ["path", "content"]
+                type: "object",
+                properties: {
+                    path: { type: "string" },
+                    content: { type: "string" }
+                },
+                required: ["path", "content"]
             }
         }]
     },
-  
+
     [Providers.Claude]: {
         name: "write_file",
         description: "Write content to a file. Overwrites existing content.",
         input_schema: {
             type: "object",
             properties: {
-            path: { type: "string" },
-            content: { type: "string" }
+                path: { type: "string" },
+                content: { type: "string" }
             },
             required: ["path", "content"]
         }
     }
 };
-  

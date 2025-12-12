@@ -2,13 +2,13 @@ import { TavilySearch } from "@langchain/tavily";
 import { stat, readFile, unlink, rm, rename, copyFile, mkdir, writeFile, appendFile } from "node:fs/promises";
 import path from 'node:path'
 import { all_def } from "./tools-def/all_def.js"
-import { MessagesMappedToTools, Providers, ToolMap } from "./types.js";
+import { MessagesMappedToTools, Providers, ToolMap } from "../types.js";
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { PDFParse } from "pdf-parse";
 import inquirer from "inquirer";
 import { glob } from 'glob';
-import { getListPrompt_In } from "./inquirer.js";
+import { getListPrompt_In } from "../inquirer.js";
 
 const execAsync = promisify(exec);
 

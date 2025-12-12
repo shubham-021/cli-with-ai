@@ -1,9 +1,9 @@
 import { HumanMessage, SystemMessage, AIMessage } from "langchain";
-import { Providers, ProviderMap, Message, ChatModels, ToolsTypes, MessagesMappedToTools, Message_memory, LTMESSAGETYPE } from "./types.js";
+import { Providers, ProviderMap, Message, ChatModels, ToolsTypes, MessagesMappedToTools, Message_memory, LTMESSAGETYPE } from "../types.js";
 import { Tools } from "./tools.js";
 import { S_PROMPT } from "./prompt/simple.js"
 import { get_planner_prompt } from "./prompt/planner.js"
-import { load_LTMemory, load_STMemory, saveLTMemory, saveSTMemory } from "./memory/memory.js";
+import { load_LTMemory, load_STMemory, saveLTMemory, saveSTMemory } from "../memory/memory.js";
 import { get_executer_prompt } from "./prompt/executer.js";
 import { PROMPT as ROUTER_PROMPT } from "./prompt/router.js";
 import { router_tool_def } from "./tools-def/router_tools/def.js";

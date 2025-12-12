@@ -1,4 +1,4 @@
-import { ToolMap,Providers } from "../../types.js";
+import { ToolMap, Providers } from "../../../types.js";
 
 interface properties {
     openai: any,
@@ -7,13 +7,13 @@ interface properties {
 }
 
 interface props {
-    name:string,
-    description:string,
-    properties:properties,
+    name: string,
+    description: string,
+    properties: properties,
     required: string[]
 }
 
-export function get_def({name,description,properties,required}:props):ToolMap{
+export function get_def({ name, description, properties, required }: props): ToolMap {
     return {
         [Providers.OpenAI]: {
             type: "function",
@@ -27,7 +27,7 @@ export function get_def({name,description,properties,required}:props):ToolMap{
                 }
             }
         },
-      
+
         [Providers.Gemini]: {
             function_declarations: [{
                 name,
@@ -39,7 +39,7 @@ export function get_def({name,description,properties,required}:props):ToolMap{
                 }
             }]
         },
-      
+
         [Providers.Claude]: {
             name,
             description,
@@ -51,4 +51,3 @@ export function get_def({name,description,properties,required}:props):ToolMap{
         }
     };
 }
-  

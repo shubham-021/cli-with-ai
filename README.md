@@ -20,7 +20,7 @@ Your pocket AI assistant in the terminal. Configure multiple LLM providers, stor
 ### From npm (Global)
 
 ```sh
-npm install -g @arka07/clai
+npm install -g @arka07/gloo
 ```
 
 ### From Source

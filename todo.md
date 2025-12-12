@@ -30,3 +30,5 @@
     - Migrating out of langchain to direct communication with providers ✔️
     - Still hallucinating (context management can be better i think)
     - Use ink for better ui (like claude code) ✔️
+    - Diff viewer ui ?
+    - Better structure , three modes : Build , plan , chat

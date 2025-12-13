@@ -34,7 +34,7 @@ export function getSystemPrompt(ctx: PromptContext): string {
 
         ## Critical Rules (ALWAYS Follow)
 
-        1. **Read Before Write**: ALWAYS use read_file before modifying existing files
+        1. **Understand Before Edit**: For code files (.js, .ts, .py, .jsx, .tsx), ALWAYS use parse_code FIRST to understand structure (functions, classes, imports). Then use read_file only if you need the full content of a specific section.
         2. **Non-Interactive Commands**: Use --yes, -y, or equivalent flags for all commands
         3. **Verify Success**: Check tool outputs before proceeding to next step
         4. **Respect Project Config**: Check package.json (or equivalent) to identify package manager and tools in use - use pnpm if pnpm-lock.yaml exists, yarn if yarn.lock exists, etc. NEVER assume npm
@@ -140,12 +140,31 @@ export function getSystemPrompt(ctx: PromptContext): string {
         - Casual chat → No tools
         - Current info → web_search (with date)
         - New project → web_search → execute_command → make_dir → write_file
-        - Modify existing → read_file → write_file
+        - Modify code file → parse_code (get structure) → read_file (only if you need full content) → write_file
+        - Modify config/text file → read_file → write_file
         - Find in files → search_in_files
         - Analyze PDF → parse_pdf
         - External API → http_request
         - Delete files → delete_file_dir (ask first if not explicit)
-        - Understand code structure before modifying → parse_code (use on existing files to find functions/classes before editing)
+
+        ### When to Use parse_code vs read_file
+
+        **parse_code** (use FIRST for code files):
+        - Returns function/class names, signatures, line numbers
+        - Shows imports and their types
+        - Gives you a map of the file without reading every line
+        - Output includes byte offsets for precise targeting
+
+        **read_file** (use AFTER parse_code if needed):
+        - When you need the exact implementation of a specific function
+        - For config files (JSON, YAML, TOML) that parse_code doesn't support
+        - For text files, markdown, etc.
+
+        **Example workflow:**
+        User: "Fix the authentication bug"
+        1. parse_code("src/auth.ts") → See: login(), logout(), validateToken()
+        2. read_file("src/auth.ts") lines 45-80 (just the validateToken function)
+        3. write_file with the fix
 
         ## Key Patterns
 

@@ -9,6 +9,8 @@ import { glob } from 'glob';
 import { Parser, Node, Language } from 'web-tree-sitter';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { StructuredIndex, SymbolInfo, ImportInfo } from '../types.js';
+import { extractStructuredIndex, getLanguage, getParser, GRAMMAR_MAP } from '../utils/parse-code.js';
 
 const execAsync = promisify(exec);
 
@@ -353,46 +355,6 @@ export const httpRequestTool = defineTool({
 
 // 15. parse_code
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const GRAMMAR_MAP: Record<string, string> = {
-    '.js': 'tree-sitter-javascript.wasm',
-    '.jsx': 'tree-sitter-javascript.wasm',
-    '.ts': 'tree-sitter-typescript.wasm',
-    '.tsx': 'tree-sitter-typescript.wasm',
-    '.py': 'tree-sitter-python.wasm',
-}
-
-
-const NODE_TYPES = {
-    functions: ['function_declaration', 'function_definition', 'method_definition', 'arrow_function', 'function_item'],
-    classes: ['class_declaration', 'class_definition', 'class'],
-    imports: ['import_statement', 'import_from_statement', 'import_declaration'],
-};
-
-function extractNodes(node: Node, types: string[]): any[] {
-    const results: any[] = [];
-
-    function traverse(n: Node) {
-        if (types.includes(n.type)) {
-            const nameNode = n.childForFieldName('name');
-            results.push({
-                type: n.type,
-                name: nameNode?.text ?? n.text.slice(0, 60).replace(/\n/g, ' '),
-                startLine: n.startPosition.row + 1,
-                endLine: n.endPosition.row + 1,
-            });
-        }
-        for (let i = 0; i < n.childCount; i++) {
-            traverse(n.child(i)!);
-        }
-    }
-
-    traverse(node);
-    return results;
-}
-
 let parserInitialized = false;
 
 export const parseCodeTool = defineTool({
@@ -417,17 +379,24 @@ export const parseCodeTool = defineTool({
             });
         }
 
+        let content: string;
+        try {
+            content = await readFile(fullPath, 'utf-8');
+        } catch (e: any) {
+            return JSON.stringify({ error: `Cannot read file: ${e.message}` });
+        }
+
         if (!parserInitialized) {
             await Parser.init();
             parserInitialized = true;
         }
 
-        const parser = new Parser();
-        const grammarPath = join(__dirname, 'grammars', grammarFile);
-        const language = await Language.load(grammarPath);
-        parser.setLanguage(language);
+        const language = await getLanguage(ext);
+        if (!language) {
+            return JSON.stringify({ error: `Failed to load grammar for: ${ext}` });
+        }
 
-        const content = await readFile(fullPath, 'utf-8');
+        const parser = getParser(ext, language);
         const tree = parser.parse(content);
         if (!tree) {
             return JSON.stringify({ error: 'Failed to parse file' });
@@ -437,15 +406,34 @@ export const parseCodeTool = defineTool({
             ? ['functions', 'classes', 'imports']
             : extract;
 
-        const nodeTypes = categories.flatMap(cat => NODE_TYPES[cat as keyof typeof NODE_TYPES] || []);
-        const extracted = extractNodes(tree.rootNode, nodeTypes);
+        const index = extractStructuredIndex(tree.rootNode, categories);
 
-        return JSON.stringify({
+        const functionCount = Object.keys(index.functions).length;
+        const classCount = Object.keys(index.classes).length;
+        const importCount = index.imports.length;
+
+        const result: any = {
             file: filePath,
             language: ext.slice(1),
             totalLines: content.split('\n').length,
-            items: extracted.length,
-            extracted
-        }, null, 2);
+            summary: {
+                functions: functionCount > 0 ? functionCount : 'None found',
+                classes: classCount > 0 ? classCount : 'None found',
+                imports: importCount > 0 ? importCount : 'None found',
+            }
+        };
+
+
+        if (functionCount > 0) result.functions = index.functions;
+        if (classCount > 0) result.classes = index.classes;
+        if (importCount > 0) result.imports = index.imports;
+
+        if (functionCount === 0 && classCount === 0) {
+            result.note = 'This file contains no named functions or classes. It may be a config, data, or script file.';
+        }
+
+        tree.delete();
+
+        return JSON.stringify(result, null, 2);
     }
 });

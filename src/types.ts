@@ -118,3 +118,32 @@ export const MessagesMappedToTools = new Map<string, string>([
 export type AgentEvent =
     | { type: 'text'; content: string }
     | { type: 'tool'; name: string; message: string };
+
+export interface SymbolInfo {
+    id: string;
+    name: string;
+    signature?: string;
+    startLine: number;
+    endLine: number;
+    startOffset: number;
+    endOffset: number;
+    isExported: boolean;
+    isTopLevel: boolean;
+    nodeDepth: number;
+    parentId: string | null;
+    salience: number;
+}
+
+export interface ImportInfo {
+    id: string;
+    moduleSpecifier: string;
+    kind: 'default' | 'named' | 'namespace' | 'side-effect';
+    startOffset: number;
+    endOffset: number;
+}
+
+export interface StructuredIndex {
+    functions: Record<string, SymbolInfo>;
+    classes: Record<string, SymbolInfo>;
+    imports: ImportInfo[];
+}

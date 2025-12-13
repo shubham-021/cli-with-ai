@@ -51,14 +51,24 @@ export function makeWebSearchTool(tavilyApiKey: string): ToolDefinition<{ query:
 // 2. read_file
 export const readFileTool = defineTool({
     name: 'read_file',
-    description: 'Read the contents of a file and return it as text.',
+    description: 'Read the contents of a file. Use startLine/endLine to read specific sections (1-indexed, inclusive).',
     category: 'filesystem',
     inputSchema: z.object({
-        path: z.string().describe('File path to read')
+        path: z.string().describe('File path to read'),
+        startLine: z.number().optional().describe('Starting line number (1-indexed, inclusive)'),
+        endLine: z.number().optional().describe('Ending line number (1-indexed, inclusive)')
     }),
-    async execute({ path: filePath }, { cwd }) {
+    async execute({ path: filePath, startLine, endLine }, { cwd }) {
         const fullPath = path.resolve(cwd, filePath);
         const content = await readFile(fullPath, 'utf-8');
+
+        if (startLine !== undefined && endLine !== undefined) {
+            const lines = content.split('\n');
+            const start = Math.max(0, startLine - 1);
+            const end = Math.min(lines.length, endLine);
+            return lines.slice(start, end).join('\n');
+        }
+
         return content;
     }
 });

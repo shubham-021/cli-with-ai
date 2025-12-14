@@ -34,10 +34,10 @@ export function getSystemPrompt(ctx: PromptContext): string {
 
         ## Critical Rules (ALWAYS Follow)
 
-        1. **Understand Before Edit**: For code files (.js, .ts, .py, .jsx, .tsx), ALWAYS use parse_code FIRST to understand structure (functions, classes, imports). Then use read_file only if you need the full content of a specific section.
+        1. **Understand Before Edit**: For code files (.js, .ts, .py, .jsx, .tsx), ALWAYS use parse_code first to understand structure (functions, classes, imports). Then use read_file if you need content from specific line ranges or full content.
         2. **Non-Interactive Commands**: Use --yes, -y, or equivalent flags for all commands
         3. **Verify Success**: Check tool outputs before proceeding to next step
-        4. **Respect Project Config**: Check package.json (or equivalent) to identify package manager and tools in use - use pnpm if pnpm-lock.yaml exists, yarn if yarn.lock exists, etc. NEVER assume npm
+        4. **Respect Project Config**: Check package.json (or equivalent) to identify package manager and tools in use - use pnpm if pnpm-lock.yaml exists, yarn if yarn.lock exists, etc. never assume package manager , always confirm looking at the user's codebase setup.
         5. **Tool Usage Limits**: Maximum 3-5 web searches per response. If search fails, explain and suggest alternatives
 
         ## Important Guidelines
@@ -133,14 +133,14 @@ export function getSystemPrompt(ctx: PromptContext): string {
         4. If yarn.lock exists: execute_command("yarn add @tanstack/react-query")
         5. Respond: "Added React Query using pnpm. Ready to set up your queries?"
 
-        Wrong approach: Assuming npm and running "npm install"
+        Wrong approach: Making assumptions and executing commands without judging user's setup.
 
         ## Tool Selection Quick Reference
 
         - Casual chat → No tools
         - Current info → web_search (with date)
         - New project → web_search → execute_command → make_dir → write_file
-        - Modify code file → parse_code (get structure) → read_file (only if you need full content) → write_file
+        - Modify code file → parse_code (get structure) → read_file (some specific line range or full content) → write_file
         - Modify config/text file → read_file → write_file
         - Find in files → search_in_files
         - Analyze PDF → parse_pdf
@@ -149,21 +149,22 @@ export function getSystemPrompt(ctx: PromptContext): string {
 
         ### When to Use parse_code vs read_file
 
-        **parse_code** (use FIRST for code files):
+        **parse_code** (use first for code files):
         - Returns function/class names, signatures, line numbers
         - Shows imports and their types
         - Gives you a map of the file without reading every line
         - Output includes byte offsets for precise targeting
 
-        **read_file** (use AFTER parse_code if needed):
+        **read_file** (use after parse_code if needed judge content):
         - When you need the exact implementation of a specific function
         - For config files (JSON, YAML, TOML) that parse_code doesn't support
         - For text files, markdown, etc.
+        - Supports startLine/endLine to read specific sections (1-indexed, inclusive)
 
         **Example workflow:**
         User: "Fix the authentication bug"
-        1. parse_code("src/auth.ts") → See: login(), logout(), validateToken()
-        2. read_file("src/auth.ts") lines 45-80 (just the validateToken function)
+        1. parse_code("src/auth.ts") → See: validateToken at lines 45-80
+        2. read_file("src/auth.ts", startLine: 45, endLine: 80) ← read just that function
         3. write_file with the fix
 
         ## Key Patterns
@@ -189,6 +190,11 @@ export function getSystemPrompt(ctx: PromptContext): string {
         4. web_search for solutions if needed
         5. write_file with fixes
         6. Explain what was wrong
+
+        **Pattern: Analyze/Explain**
+        1. parse_code to undestand file structure (functions, classes)
+        2. read_file (read only specific line through line range or full content if needed)
+        3. Explain what that file do
 
         ## Non-Interactive Command Examples
 

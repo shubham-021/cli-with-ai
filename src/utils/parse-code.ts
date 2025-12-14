@@ -43,8 +43,21 @@ export function getParser(ext: string, language: Language): Parser {
 }
 
 const NODE_TYPES = {
-    functions: ['function_declaration', 'function_definition', 'method_definition', 'arrow_function'],
-    classes: ['class_declaration', 'class_definition'],
+    functions: [
+        'function_declaration',
+        'function_definition',
+        'method_definition',
+        'arrow_function',
+        'function',
+        'method',
+        'generator_function_declaration',
+        'generator_function',
+    ],
+    classes: [
+        'class_declaration',
+        'class_definition',
+        'class',
+    ],
     imports: ['import_statement', 'import_from_statement'],
 };
 
@@ -203,9 +216,18 @@ export function extractStructuredIndex(rootNode: Node, categories: string[]): St
             return;
         }
 
-        const isStructuralContainer = ['program', 'module', 'class_body', 'export_statement', 'lexical_declaration'].includes(nodeType);
+        const isStructuralContainer = [
+            'program',
+            'module',
+            'class_body',
+            'export_statement',
+            'lexical_declaration',
+            'statement_block',
+            'expression_statement',
+            'variable_declaration',
+        ].includes(nodeType);
 
-        if (isStructuralContainer || ctx.depth < 2) {
+        if (isStructuralContainer || ctx.depth < 3) {
             for (let i = 0; i < n.childCount; i++) {
                 traverse(n.child(i)!, { ...ctx, depth: ctx.depth + 1 });
             }

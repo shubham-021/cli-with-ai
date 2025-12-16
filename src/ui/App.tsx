@@ -231,9 +231,11 @@ export function App() {
                         )}
 
                         {error && (
-                            <Text color={theme.colors.error}>
-                                {error}
-                            </Text>
+                            <DebugBox
+                                type="error"
+                                title="Gloo is facing some issues"
+                                message={error}
+                            />
                         )}
                     </Box>
 

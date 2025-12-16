@@ -1,6 +1,6 @@
 import { ToolDefinition, ToolSet, ToolContext } from './types.js';
 import { Providers } from '../providers/index.js';
-import * as z from 'zod';
+import { zodToOpenAI, zodToGemini, zodToClaude } from './schema-converters.js';
 
 export class ToolRegistry {
     private tools: ToolSet = {};
@@ -19,8 +19,6 @@ export class ToolRegistry {
 
     getForProvider(provider: Providers): any[] {
         return Object.values(this.tools).map(tool => {
-            const jsonSchema = z.toJSONSchema(tool.inputSchema as any);
-
             // Debug: Log raw zod schema
             // if (process.env.GLOO_DEBUG === 'true' && tool.name === 'web_search') {
             //     console.log('\n\nRAW ZOD SCHEMA for web_search:');
@@ -34,20 +32,20 @@ export class ToolRegistry {
                         function: {
                             name: tool.name,
                             description: tool.description,
-                            parameters: jsonSchema
+                            parameters: zodToOpenAI(tool.inputSchema)
                         }
                     };
                 case Providers.Gemini:
                     return {
                         name: tool.name,
                         description: tool.description,
-                        parameters: jsonSchema
+                        parameters: zodToGemini(tool.inputSchema)
                     };
                 case Providers.Claude:
                     return {
                         name: tool.name,
                         description: tool.description,
-                        input_schema: jsonSchema
+                        input_schema: zodToClaude(tool.inputSchema)
                     };
             }
         });

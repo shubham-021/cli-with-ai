@@ -1,6 +1,6 @@
 {
   "name": "@arka07/gloo",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Your own assistant in your cli",
   "bin": {
     "gloo": "dist/main.js"
@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "start": "pnpm ts-node ./src/main.ts",
-    "build": "tsc && cp -r src/tools/grammars dist/tools/",
+    "build": "tsc",
+    "grammar": "cp -r src/tools/grammars dist/tools/",
     "prepublishOnly": "pnpm build"
   },
   "keywords": [],

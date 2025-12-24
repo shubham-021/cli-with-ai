@@ -19,7 +19,7 @@ class LLMCore {
         const toolRegistry = new ToolRegistry();
         toolRegistry.registerAll(allTools(searchApi));
 
-        this.agent = new Agent({ llm, toolRegistry, provider });
+        this.agent = new Agent({ llm, toolRegistry, provider, apiKey: api });
     }
 
     async *chat(query: string): AsyncGenerator<AgentEvent> {

@@ -22,7 +22,7 @@ export function StatusBar({ provider, model }: StatusBarProps) {
                 }
             </Text>
             <Text color={theme.colors.textDim}> | </Text>
-            <Text color={theme.colors.textMuted}>Type 'q' to quit , 'Ctrl+S' for settings</Text>
+            <Text color={theme.colors.textMuted}>Type 'q' to quit , 'Ctrl+S' or Type 's' for settings</Text>
         </Box>
     )
 }

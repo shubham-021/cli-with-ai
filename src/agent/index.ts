@@ -5,6 +5,7 @@ import { getSystemPrompt } from './system-prompt.js';
 import { load_STMemory, load_LTMemory, saveSTMemory } from '../memory/memory.js';
 import { AgentEvent, MessagesMappedToTools } from '../types.js';
 import { getArgPreview } from '../utils/argPreview.js';
+import { analyzeForMemory } from '../memory/analyzer.js';
 
 const MAX_STEPS = 20;
 
@@ -12,15 +13,18 @@ export class Agent {
     private llm: ChatProvider;
     private toolRegistry: ToolRegistry;
     private provider: Providers;
+    private apiKey: string;
 
     constructor(options: {
         llm: ChatProvider;
         toolRegistry: ToolRegistry;
         provider: Providers;
+        apiKey: string;
     }) {
         this.llm = options.llm;
         this.toolRegistry = options.toolRegistry;
         this.provider = options.provider;
+        this.apiKey = options.apiKey;
     }
 
     async *run(query: string): AsyncGenerator<AgentEvent> {
@@ -35,6 +39,8 @@ export class Agent {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: query }
         ];
+
+        analyzeForMemory(query, this.provider, this.apiKey);
 
         const tools = this.toolRegistry.getForProvider(this.provider);
         let stepCount = 0;

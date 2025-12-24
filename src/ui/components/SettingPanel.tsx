@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Box, Text, useInput } from "ink";
 import SelectInput from "ink-select-input";
 import Conf from "conf";
@@ -98,12 +98,14 @@ export function SettingPanel({ onClose, onConfigChange }: SettingPanelProps) {
         }
     };
 
-    const configItems = getAllConfigs().map(name => ({
-        label: name === defaultConfigName ? `${theme.icons.selected} ${name} (current)` : `${theme.icons.unselected} ${name}`,
-        value: name
-    }));
-
-    configItems.push({ label: `${theme.icons.back} Back`, value: '__back__' });
+    const configItems = useMemo(() => {
+        const items = getAllConfigs().map(name => ({
+            label: name === defaultConfigName ? `${theme.icons.selected} ${name} (current)` : `${theme.icons.unselected} ${name}`,
+            value: name
+        }));
+        items.push({ label: `${theme.icons.back} Back`, value: '__back__' });
+        return items;
+    }, [defaultConfigName]);
 
     const handleSwitchSelect = (item: { value: string }) => {
         if (item.value === '__back__') {
@@ -115,8 +117,11 @@ export function SettingPanel({ onClose, onConfigChange }: SettingPanelProps) {
         setView('main');
     };
 
-    const providerItems: { label: string; value: string }[] = Object.values(Providers).map(p => ({ label: p, value: p }));
-    providerItems.push({ label: `${theme.icons.back} Back`, value: '__back__' });
+    const providerItems = useMemo(() => {
+        const items: { label: string; value: string }[] = Object.values(Providers).map(p => ({ label: p, value: p }));
+        items.push({ label: `${theme.icons.back} Back`, value: '__back__' });
+        return items;
+    }, []);
 
     const handleProviderSelect = (item: { value: string }) => {
         if (item.value === '__back__') {
@@ -127,11 +132,13 @@ export function SettingPanel({ onClose, onConfigChange }: SettingPanelProps) {
         setView('create-model');
     };
 
-    const modelItems: { label: string; value: string }[] = selectedProvider
-        ? getModelsForProvider(selectedProvider).map(m => ({ label: m, value: m }))
-        : [];
-
-    modelItems.push({ label: `${theme.icons.back} Back`, value: '__back__' });
+    const modelItems = useMemo(() => {
+        const items: { label: string; value: string }[] = selectedProvider
+            ? getModelsForProvider(selectedProvider).map(m => ({ label: m, value: m }))
+            : [];
+        items.push({ label: `${theme.icons.back} Back`, value: '__back__' });
+        return items;
+    }, [selectedProvider]);
 
     const handleModelSelect = (item: { value: string }) => {
         if (item.value === '__back__') {
@@ -245,11 +252,13 @@ export function SettingPanel({ onClose, onConfigChange }: SettingPanelProps) {
     };
 
 
-    const deleteItems = getAllConfigs()
-        .filter(name => name !== defaultConfigName)
-        .map(name => ({ label: `${name}`, value: name }));
-
-    deleteItems.push({ label: `${theme.icons.back} Back`, value: '__back__' });
+    const deleteItems = useMemo(() => {
+        const items = getAllConfigs()
+            .filter(name => name !== defaultConfigName)
+            .map(name => ({ label: `${name}`, value: name }));
+        items.push({ label: `${theme.icons.back} Back`, value: '__back__' });
+        return items;
+    }, [defaultConfigName]);
 
     const handleDeleteSelect = (item: { value: string }) => {
         if (item.value === '__back__') {
@@ -372,7 +381,7 @@ export function SettingPanel({ onClose, onConfigChange }: SettingPanelProps) {
                         value={newConfigApi}
                         onChange={setNewConfigApi}
                         onSubmit={handleNewConfigApiSubmit}
-                        placeholder="sk-..."
+                        placeholder="....."
                     />
                     <Box marginTop={1}>
                         <Text color={theme.colors.textDim}>

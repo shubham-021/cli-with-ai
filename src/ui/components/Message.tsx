@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Box, Text } from 'ink';
 import { theme } from '../theme.js';
 
@@ -7,7 +7,7 @@ interface MessageProps {
     content: string;
 }
 
-export function Message({ role, content }: MessageProps) {
+export const Message = memo(function Message({ role, content }: MessageProps) {
     const isUser = role === 'user';
 
     return (
@@ -24,4 +24,4 @@ export function Message({ role, content }: MessageProps) {
             </Box>
         </Box>
     );
-}
+});

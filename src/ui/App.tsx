@@ -1,18 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Box, Text, useApp, Static, useInput } from 'ink';
 import Conf from 'conf';
 import { Banner, Spinner, StatusBar, Message, TextInput, DebugBox, ApprovalPrompt, SettingPanel } from './components/index.js';
-import { theme } from './theme.js';
 import LLMCore from '../core.js';
 import { Config } from '../types.js';
 import { ToolActivity } from './components/ToolActivity.js';
 
 const config = new Conf({ projectName: 'gloo-cli' });
+const MAX_CHAT_ITEMS = 100;
 
 type ChatItem =
     | { type: 'banner'; id: number }
     | { type: 'message'; id: number; role: 'user' | 'assistant'; content: string }
     | { type: 'debug'; id: number; level: 'error' | 'warning' | 'info'; title: string; message: string; details?: string };
+
+const addChatItem = (prev: ChatItem[], ...items: ChatItem[]): ChatItem[] => {
+    const newItems = [...prev, ...items];
+    return newItems.length > MAX_CHAT_ITEMS ? newItems.slice(-MAX_CHAT_ITEMS) : newItems;
+};
 
 let itemIdCounter = 0;
 
@@ -33,26 +38,7 @@ export function App() {
     const [showSettings, setShowSettings] = useState(false);
     const [configVersion, setConfigVersion] = useState(0);
 
-    const streamingBufferRef = useRef('');
     const [displayText, setDisplayText] = useState('');
-
-    useEffect(() => {
-        if (!isLoading) {
-            if (displayText !== '') {
-                setDisplayText('');
-            }
-            return;
-        }
-
-        const interval = setInterval(() => {
-            const currentBuffer = streamingBufferRef.current;
-            if (currentBuffer !== displayText) {
-                setDisplayText(currentBuffer);
-            }
-        }, 100);
-
-        return () => clearInterval(interval);
-    }, [isLoading, displayText]);
 
     const defaultConfig = config.get('default') as string | undefined;
     const currentConfig = defaultConfig ? config.get(defaultConfig) as Config : undefined;
@@ -75,10 +61,10 @@ export function App() {
         }
 
         if (command === 'help') {
-            setChatItems(prev => [...prev,
-            { type: 'message', id: ++itemIdCounter, role: 'user', content: 'help' },
-            { type: 'message', id: ++itemIdCounter, role: 'assistant', content: 'Commands: q/quit (exit) , help. Just type your question' }
-            ]);
+            setChatItems(prev => addChatItem(prev,
+                { type: 'message', id: ++itemIdCounter, role: 'user', content: 'help' },
+                { type: 'message', id: ++itemIdCounter, role: 'assistant', content: 'Commands: q/quit (exit), s/settings (open settings), Ctrl+S (settings), help. Just type your question.' }
+            ));
 
             setInput('');
             return;
@@ -90,10 +76,11 @@ export function App() {
             return;
         }
 
-        setChatItems(prev => [...prev, { type: 'message', id: ++itemIdCounter, role: 'user', content: trimmed }]);
+        setChatItems(prev => addChatItem(prev,
+            { type: 'message', id: ++itemIdCounter, role: 'user', content: trimmed }
+        ));
         setInput('');
         setIsLoading(true);
-        streamingBufferRef.current = '';
         setDisplayText('');
         setError(null);
 
@@ -110,18 +97,18 @@ export function App() {
                 if (event.type === 'text') {
                     setCurrentTool(null);
                     fullResponse += event.content;
-                    streamingBufferRef.current = fullResponse;
+                    setDisplayText(fullResponse);
                 } else if (event.type === 'tool') {
                     setCurrentTool(event.message);
                 } else if (event.type === 'debug') {
-                    setChatItems(prev => [...prev, {
+                    setChatItems(prev => addChatItem(prev, {
                         type: 'debug',
                         id: ++itemIdCounter,
                         level: event.level,
                         title: event.title,
                         message: event.message,
                         details: event.details
-                    }]);
+                    }));
                 } else if (event.type === 'approval') {
                     setPendingApproval({
                         toolName: event.toolName,
@@ -131,18 +118,18 @@ export function App() {
                 }
             }
 
-            setChatItems(prev => [...prev, { type: 'message', id: ++itemIdCounter, role: 'assistant', content: fullResponse }]);
-            streamingBufferRef.current = '';
+            setChatItems(prev => addChatItem(prev, { type: 'message', id: ++itemIdCounter, role: 'assistant', content: fullResponse }));
+            setDisplayText('');
         } catch (err) {
             if (process.env.GLOO_DEBUG === 'true') {
-                setChatItems(prev => [...prev, {
+                setChatItems(prev => addChatItem(prev, {
                     type: 'debug',
                     id: ++itemIdCounter,
                     level: 'error',
                     title: 'Error',
                     message: (err as Error).message,
                     details: (err as Error).stack
-                }]);
+                }));
             }
             setError((err as Error).message);
         } finally {
@@ -151,7 +138,7 @@ export function App() {
         }
     }
 
-    const renderChatItem = (item: ChatItem) => {
+    const renderChatItem = useCallback((item: ChatItem) => {
         if (item.type === 'banner') {
             return <Banner key={item.id} />;
         } else if (item.type === 'message') {
@@ -168,7 +155,7 @@ export function App() {
             );
         }
         return null;
-    };
+    }, []);
 
     const handleSettingsClose = () => {
         setShowSettings(false);

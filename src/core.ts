@@ -2,7 +2,7 @@ import { createProvider, Providers } from './providers/index.js';
 import { Agent } from './agent/index.js';
 import { ToolRegistry } from './tools/registry.js';
 import { allTools } from './tools/all.js';
-import { AgentEvent } from './types.js';
+import { AgentEvent, AgentMode } from './types.js';
 
 
 class LLMCore {
@@ -19,7 +19,15 @@ class LLMCore {
         const toolRegistry = new ToolRegistry();
         toolRegistry.registerAll(allTools(searchApi));
 
-        this.agent = new Agent({ llm, toolRegistry, provider, apiKey: api });
+        this.agent = new Agent({ llm, toolRegistry, provider, apiKey: api, searchApi });
+    }
+
+    setMode(mode: AgentMode): void {
+        this.agent.setMode(mode);
+    }
+
+    getMode(): AgentMode {
+        return this.agent.getMode();
     }
 
     async *chat(query: string): AsyncGenerator<AgentEvent> {

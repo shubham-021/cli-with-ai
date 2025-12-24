@@ -3,7 +3,7 @@ import { Box, Text, useApp, Static, useInput } from 'ink';
 import Conf from 'conf';
 import { Banner, Spinner, StatusBar, Message, TextInput, DebugBox, ApprovalPrompt, SettingPanel } from './components/index.js';
 import LLMCore from '../core.js';
-import { Config } from '../types.js';
+import { Config, AgentMode } from '../types.js';
 import { ToolActivity } from './components/ToolActivity.js';
 
 const config = new Conf({ projectName: 'gloo-cli' });
@@ -30,6 +30,9 @@ export function App() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [currentTool, setCurrentTool] = useState<string | null>(null);
+
+    const [mode, setMode] = useState<AgentMode>(AgentMode.CHAT);
+
     const [pendingApproval, setPendingApproval] = useState<{
         toolName: string;
         args: Record<string, any>;
@@ -70,6 +73,33 @@ export function App() {
             return;
         }
 
+        if (command === '/chat' || command === 'chat') {
+            setMode(AgentMode.CHAT);
+            setChatItems(prev => addChatItem(prev,
+                { type: 'message', id: ++itemIdCounter, role: 'assistant', content: 'Switched to Chat Mode' }
+            ));
+            setInput('');
+            return;
+        }
+
+        if (command === '/plan' || command === 'plan') {
+            setMode(AgentMode.PLAN);
+            setChatItems(prev => addChatItem(prev,
+                { type: 'message', id: ++itemIdCounter, role: 'assistant', content: 'Switched to Plan Mode' }
+            ));
+            setInput('');
+            return;
+        }
+
+        if (command === '/build' || command === 'build') {
+            setMode(AgentMode.BUILD);
+            setChatItems(prev => addChatItem(prev,
+                { type: 'message', id: ++itemIdCounter, role: 'assistant', content: 'Switched to Build Mode' }
+            ));
+            setInput('');
+            return;
+        }
+
         if (!currentConfig?.api || !currentConfig?.search_api) {
             setShowSettings(true);
             setInput('');
@@ -91,6 +121,8 @@ export function App() {
                 currentConfig.api,
                 currentConfig.search_api
             );
+
+            llm.setMode(mode);
 
             let fullResponse = '';
             for await (const event of llm.chat(trimmed)) {
@@ -229,6 +261,7 @@ export function App() {
                     <StatusBar
                         provider={currentConfig?.provider}
                         model={currentConfig?.model}
+                        mode={mode}
                     />
 
                     {!isLoading && (

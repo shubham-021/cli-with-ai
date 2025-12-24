@@ -149,3 +149,9 @@ export interface StructuredIndex {
     classes: Record<string, SymbolInfo>;
     imports: ImportInfo[];
 }
+
+export enum AgentMode {
+    CHAT = 'chat',
+    PLAN = 'plan',
+    BUILD = 'build'
+}

@@ -1,9 +1,10 @@
 import { ChatProvider, ChatMessage, Providers } from '../providers/index.js';
 import { formatToolArgs, formatApprovalPrompt } from '../utils/format.js';
 import { ToolRegistry } from '../tools/registry.js';
-import { getSystemPrompt } from './system-prompt.js';
+import { getSystemPrompt } from './prompts/index.js';
+import { getToolsForMode } from './tools-by-mode.js';
 import { load_STMemory, load_LTMemory, saveSTMemory } from '../memory/memory.js';
-import { AgentEvent, MessagesMappedToTools } from '../types.js';
+import { AgentEvent, MessagesMappedToTools, AgentMode } from '../types.js';
 import { getArgPreview } from '../utils/argPreview.js';
 import { analyzeForMemory } from '../memory/analyzer.js';
 
@@ -11,20 +12,34 @@ const MAX_STEPS = 20;
 
 export class Agent {
     private llm: ChatProvider;
-    private toolRegistry: ToolRegistry;
+    // private toolRegistry: ToolRegistry;
     private provider: Providers;
     private apiKey: string;
+    private searchApi: string;
+    private mode: AgentMode = AgentMode.CHAT;
 
     constructor(options: {
         llm: ChatProvider;
         toolRegistry: ToolRegistry;
         provider: Providers;
         apiKey: string;
+        searchApi: string;
+        mode?: AgentMode;
     }) {
         this.llm = options.llm;
-        this.toolRegistry = options.toolRegistry;
+        // this.toolRegistry = options.toolRegistry;
         this.provider = options.provider;
         this.apiKey = options.apiKey;
+        this.searchApi = options.searchApi;
+        this.mode = options.mode ?? AgentMode.CHAT;
+    }
+
+    setMode(mode: AgentMode): void {
+        this.mode = mode;
+    }
+
+    getMode(): AgentMode {
+        return this.mode;
     }
 
     async *run(query: string): AsyncGenerator<AgentEvent> {
@@ -32,7 +47,8 @@ export class Agent {
             cwd: process.cwd(),
             date: new Date().toLocaleDateString(),
             shortTermMemory: load_STMemory(),
-            longTermMemory: load_LTMemory()
+            longTermMemory: load_LTMemory(),
+            mode: this.mode
         });
 
         const messages: ChatMessage[] = [
@@ -42,7 +58,9 @@ export class Agent {
 
         analyzeForMemory(query, this.provider, this.apiKey);
 
-        const tools = this.toolRegistry.getForProvider(this.provider);
+        const toolRegistry = getToolsForMode(this.mode, this.provider, this.searchApi);
+        const tools = toolRegistry.getForProvider(this.provider);
+
         let stepCount = 0;
 
         while (true) {
@@ -105,7 +123,7 @@ export class Agent {
             } as any);
 
             for (const toolCall of response.tool_calls) {
-                const tool = this.toolRegistry.get(toolCall.name);
+                const tool = toolRegistry.get(toolCall.name);
 
                 if (tool?.needsApproval) {
                     const shouldApprove = typeof tool.needsApproval === 'function'
@@ -154,7 +172,7 @@ export class Agent {
 
                 let result: string;
                 try {
-                    result = await this.toolRegistry.execute(
+                    result = await toolRegistry.execute(
                         toolCall.name,
                         toolCall.args,
                         { cwd: process.cwd() }

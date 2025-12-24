@@ -12,7 +12,8 @@ interface StatusBarProps {
 const MODE_DISPLAY: Record<AgentMode, { label: string; color: string; icon: string }> = {
     [AgentMode.CHAT]: { label: 'Chat', color: '#60a5fa', icon: '' },
     [AgentMode.PLAN]: { label: 'Plan', color: '#fbbf24', icon: '' },
-    [AgentMode.BUILD]: { label: 'Build', color: '#4ade80', icon: '' }
+    [AgentMode.BUILD]: { label: 'Build', color: '#4ade80', icon: '' },
+    [AgentMode.ROAST]: { label: 'Roast', color: '#ef4444', icon: '' }
 };
 
 export function StatusBar({ provider, model, mode }: StatusBarProps) {
